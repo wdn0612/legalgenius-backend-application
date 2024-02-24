@@ -6,7 +6,6 @@ package com.dntech.budgetplanningapp.facade.request;
 
 import lombok.Data;
 
-import java.io.Serial;
 import java.io.Serializable;
 
 /**
@@ -18,7 +17,6 @@ import java.io.Serializable;
 @Data
 public class BudgetDeleteRequest implements Serializable {
 
-    @Serial
     private static final long   serialVersionUID = -1096463356529877612L;
 
     private              String authKey;

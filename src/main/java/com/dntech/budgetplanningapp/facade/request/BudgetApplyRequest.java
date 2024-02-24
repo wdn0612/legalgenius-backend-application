@@ -4,12 +4,8 @@
  */
 package com.dntech.budgetplanningapp.facade.request;
 
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
 
-import java.io.Serial;
 import java.io.Serializable;
 
 /**
@@ -21,7 +17,6 @@ import java.io.Serializable;
 @Data
 public class BudgetApplyRequest implements Serializable {
 
-    @Serial
     private static final long serialVersionUID = 7001010527078257754L;
 
     private String authKey;

@@ -53,7 +53,7 @@ public class BudgetManagerImpl implements BudgetManager {
     private final String appToken = "VFq6bCHQbaULRxsJsdfcY4fBnrb";
 
     @Override
-    public boolean create(String email) {
+    public boolean create(String email) throws InterruptedException {
         // 1. 生成authKey
         String authKey = generateAuthKey(System.currentTimeMillis() + email);
         log.info("生成authKey: " + authKey);
@@ -65,6 +65,7 @@ public class BudgetManagerImpl implements BudgetManager {
         // 3. 绑定用户、authKey、文档模版、交易记录表
         String url = copyBaseAppResponse.getUrl();
         String appToken = copyBaseAppResponse.getAppToken();
+        Thread.sleep(1000);
         AppTablesResponse appTablesResponse = feiShuService.listAppTables(appToken);
 
         // 4. 落库

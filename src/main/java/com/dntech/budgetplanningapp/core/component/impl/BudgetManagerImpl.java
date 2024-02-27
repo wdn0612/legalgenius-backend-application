@@ -62,19 +62,25 @@ public class BudgetManagerImpl implements BudgetManager {
         copyBaseAppRequest.setName("[Dev] Auto Budgeting App");
         copyBaseAppRequest.setWithoutContent(false);
         CopyBaseAppResponse copyBaseAppResponse = feiShuService.copyBaseApp(copyBaseAppRequest);
-        // 3. 绑定用户、authKey、文档模版
+        // 3. 绑定用户、authKey、文档模版、交易记录表
         String url = copyBaseAppResponse.getUrl();
         String appToken = copyBaseAppResponse.getAppToken();
+        AppTablesResponse appTablesResponse = feiShuService.listAppTables(appToken);
+
         // 4. 落库
         BudgetInfoDO budgetInfoDO = new BudgetInfoDO();
         budgetInfoDO.setAuthKey(authKey);
         budgetInfoDO.setEmail(email);
         budgetInfoDO.setFileUrl(url);
         budgetInfoDO.setAppToken(appToken);
+        budgetInfoDO.setTransactionTableId(getTransactionTableId(appTablesResponse));
+
+        // 5. 更新文档编辑权限
+        feiShuService.updatePermissionPublic(appToken);
 
         log.info("生成新记账用户: " + budgetInfoDO);
         budgetInfoRepository.insert(budgetInfoDO);
-        // 5. 触发邮件通知
+        // 6. 触发邮件通知
         emailService.send("successfully created");
         return true;
     }
@@ -104,11 +110,8 @@ public class BudgetManagerImpl implements BudgetManager {
 
         // 1. 查询authKey关联文档
         String appToken = budgetInfoDO.getAppToken();
+        String tableId = budgetInfoDO.getTransactionTableId();
 
-        // 2. 调用飞书API查询表内容
-        AppTablesResponse appTablesResponse = feiShuService.listAppTables(appToken);
-
-        String tableId = getTransactionTableId(appTablesResponse);
         // 3. 组装结果返回
         List<FieldInfoResponse> transactionFieldsInfo = feiShuService.listTableFields(appToken, tableId);
 

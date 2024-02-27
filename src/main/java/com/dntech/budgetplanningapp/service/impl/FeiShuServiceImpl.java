@@ -111,7 +111,7 @@ public class FeiShuServiceImpl implements FeiShuService {
     }
 
     @Override
-    public boolean updatePermissionPublic(String appToken, String tenantAccessToken) {
+    public boolean updatePermissionPublic(String appToken) {
         return IntegrationTemplate.invoke(new IntegrationCallback<Boolean>() {
             @Override
             public Boolean execute() throws Exception {

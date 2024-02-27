@@ -23,4 +23,5 @@ public class BudgetInfoDO {
     private String email;
     private String fileUrl;
     private String appToken;
+    private String transactionTableId;
 }

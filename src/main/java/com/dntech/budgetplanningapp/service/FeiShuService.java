@@ -34,7 +34,7 @@ public interface FeiShuService {
      * @param appToken
      * @return
      */
-    boolean updatePermissionPublic(String appToken, String tenantAccessToken);
+    boolean updatePermissionPublic(String appToken);
 
     /**
      * 获取app的所有表格

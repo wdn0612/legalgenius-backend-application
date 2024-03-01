@@ -34,7 +34,11 @@ public class MngOperateFacadeImpl implements MngOperateFacade {
     @Override
     public boolean apply(String email) {
         log.info("提交记账申请, email: " + email);
-        budgetManager.create(email);
+        try {
+            budgetManager.create(email);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
         return true;
     }
 

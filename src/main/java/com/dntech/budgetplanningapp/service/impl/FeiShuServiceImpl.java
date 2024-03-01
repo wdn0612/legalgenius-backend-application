@@ -52,10 +52,10 @@ public class FeiShuServiceImpl implements FeiShuService {
     /**
      * TODO: 后续refactor为properties
      */
-    private static final String appId     = "cli_a5448ba5fe62d00c";
-    private static final String appSecret = "AV3kHBkYwzlilnHIfOjvidw4SDFGFJIC";
+    private static final String appId     = "cli_a555e5c21cf89010";
+    private static final String appSecret = "fmFqpQNIIrdxI370lgPjYbmuP7QgZfIG";
 
-    private static final String appToken = "AmQTbUYLAaPObRsl6UOcWu9XnDf";
+    private static final String appToken = "KcDdbrHPDale2NsMZMNldam9gjF";
 
     // TODO：设置超时时间
     private static final Client client = Client.newBuilder(appId, appSecret).build();

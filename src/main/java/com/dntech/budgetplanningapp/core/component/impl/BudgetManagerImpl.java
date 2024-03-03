@@ -56,7 +56,7 @@ public class BudgetManagerImpl implements BudgetManager {
         log.info("生成authKey: " + authKey);
         // 2. 复制文档模版
         CopyBaseAppRequest copyBaseAppRequest = new CopyBaseAppRequest();
-        copyBaseAppRequest.setName("[Dev] Auto Budgeting App");
+        copyBaseAppRequest.setName("iPhone Auto Budgeting Dashboard");
         copyBaseAppRequest.setWithoutContent(false);
         CopyBaseAppResponse copyBaseAppResponse = feiShuService.copyBaseApp(copyBaseAppRequest);
         // 3. 绑定用户、authKey、文档模版、交易记录表

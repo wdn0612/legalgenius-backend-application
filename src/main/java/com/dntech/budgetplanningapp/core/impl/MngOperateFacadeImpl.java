@@ -32,14 +32,13 @@ public class MngOperateFacadeImpl implements MngOperateFacade {
      */
     @GetMapping("/api/v1/mng/apply")
     @Override
-    public boolean apply(String email) {
+    public String apply(String email) {
         log.info("提交记账申请, email: " + email);
         try {
-            budgetManager.create(email);
+            return budgetManager.create(email);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        return true;
     }
 
     /**

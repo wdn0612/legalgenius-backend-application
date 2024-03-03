@@ -49,11 +49,8 @@ public class BudgetManagerImpl implements BudgetManager {
     @Resource
     private BudgetInfoRepository budgetInfoRepository;
 
-    // TODO: 从库里取
-    private final String appToken = "VFq6bCHQbaULRxsJsdfcY4fBnrb";
-
     @Override
-    public boolean create(String email) throws InterruptedException {
+    public String create(String email) throws InterruptedException {
         // 1. 生成authKey
         String authKey = generateAuthKey(System.currentTimeMillis() + email);
         log.info("生成authKey: " + authKey);
@@ -83,7 +80,8 @@ public class BudgetManagerImpl implements BudgetManager {
         budgetInfoRepository.insert(budgetInfoDO);
         // 6. 触发邮件通知
         emailService.send("successfully created");
-        return true;
+
+        return "AUTH-KEY:" + authKey + "\n" + "URL:" + url;
     }
 
     @Override

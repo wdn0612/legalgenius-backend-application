@@ -17,7 +17,7 @@ import java.util.Map;
  */
 public interface BudgetManager {
 
-    boolean create(String email) throws InterruptedException;
+    String create(String email) throws InterruptedException;
 
     boolean delete(String authKey);
 

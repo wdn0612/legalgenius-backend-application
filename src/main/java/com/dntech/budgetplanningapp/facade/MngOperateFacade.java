@@ -21,7 +21,7 @@ public interface MngOperateFacade {
      * @param authKey
      * @return
      */
-    boolean apply(@RequestParam String email);
+    String apply(@RequestParam String email);
 
     /**
      * 删除记账记录入口

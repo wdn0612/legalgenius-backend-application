@@ -191,8 +191,8 @@ public class BudgetManagerImpl implements BudgetManager {
                 hexString.append(hex);
             }
 
-            // Return the first 8 characters of the MD5 hash (32 bits)
-            return hexString.toString().substring(0, 8);
+            // Return the first 16 characters of the MD5 hash (32 bits)
+            return hexString.toString().substring(0, 16);
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException("MD5 hashing algorithm not found", e);
         }

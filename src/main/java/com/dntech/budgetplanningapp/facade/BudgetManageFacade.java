@@ -31,4 +31,11 @@ public interface BudgetManageFacade {
      * @return
      */
     boolean addRecord(AddRecordRequest addRecordRequest);
+
+    /**
+     * 保持awake
+     *
+     * @return
+     */
+    String heartbeat();
 }

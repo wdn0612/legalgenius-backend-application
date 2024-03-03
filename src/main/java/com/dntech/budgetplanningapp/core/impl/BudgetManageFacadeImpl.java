@@ -64,4 +64,10 @@ public class BudgetManageFacadeImpl implements BudgetManageFacade {
         budgetManager.addRecord(addRecordRequest.getAuthKey(), budgetRecord);
         return true;
     }
+
+    @PostMapping("/api/v1/hello")
+    @Override
+    public String heartbeat() {
+        return "hello";
+    }
 }

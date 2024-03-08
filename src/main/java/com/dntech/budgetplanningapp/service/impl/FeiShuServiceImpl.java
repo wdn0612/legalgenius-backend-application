@@ -49,9 +49,6 @@ import java.util.stream.Collectors;
 @Service
 public class FeiShuServiceImpl implements FeiShuService {
 
-    /**
-     * TODO: 后续refactor为properties
-     */
     private static final String appId     = "cli_a555e5c21cf89010";
     private static final String appSecret = "fmFqpQNIIrdxI370lgPjYbmuP7QgZfIG";
 

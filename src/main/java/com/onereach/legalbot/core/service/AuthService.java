@@ -1,9 +1,11 @@
 /*
- * Ant Group
+ * DN 
  * Copyright (c) 2004-2024 All Rights Reserved.
  */
 package com.onereach.legalbot.core.service;
 
+import com.onereach.legalbot.infrastructure.PartnerMngUserInfoRepository;
+import com.onereach.legalbot.infrastructure.model.PartnerMngUserInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
@@ -17,10 +19,14 @@ import java.util.UUID;
  */
 @Service
 public class AuthService {
-
-
     @Autowired
     private CacheManager cacheManager;
+
+    @Autowired
+    private UserPasswordService userPasswordService;
+
+    @Autowired
+    private PartnerMngUserInfoRepository partnerMngUserInfoRepository;
 
     public String login(String username, String password) {
         // 验证用户名和密码
@@ -46,12 +52,13 @@ public class AuthService {
             cache.put(token, username);
             return true;
         }
-        return throw new RuntimeException("invalid token");
+        throw new RuntimeException("invalid token");
     }
 
     private boolean isValidUser(String username, String password) {
         // 这里可以是数据库查询或其他验证逻辑
-        // TODO 查库，hash逻辑
-        return "user".equals(username) && "password".equals(password);
+        PartnerMngUserInfo mngUserInfo = partnerMngUserInfoRepository.findByUserName(username);
+        return userPasswordService.matches(password, mngUserInfo.getPasswordHash());
+
     }
 }

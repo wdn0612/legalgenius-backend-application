@@ -1,0 +1,62 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+title 对客小程序聊天流程
+autonumber
+participant 前端小程序 as fe
+participant 应用层 as app
+participant 模型层 as model
+
+group 登陆
+fe -> app: 发起POST请求 /api/v1/user/login
+app -> app: 落user_info表
+app --> fe: 返回成功
+end
+
+group 发起对话
+
+fe -> app: 发起POST请求 /api/v1/chat
+app -> app: 判断是否是初次请求
+alt 初次对话
+app -> app: 生成conversationId
+else 用户第二轮对话
+app -> app: 根据conversationId获取历史对话记录
+app -> model: 生成15字内的对话标题
+else 第三轮及以上
+app -> app: 根据conversationId获取历史对话记录
+end
+app -> model: 发起对话API /legalgenius/v1/model/chat/completion
+model --> app: 同步返回对话响应，需要包含是否有预约意向 //reservationIntent
+app -> app: 更新聊天记录
+app --> fe: 返回对话响应，需要包含是否有预约意向 // reservationIntent
+
+end
+
+group 结束对话
+fe -> fe: 确认客户5分钟未活跃
+fe -> app: 发起POST请求 /api/v1/endChat
+app -> app: 根据conversationId获取历史对话记录
+app -> app: 更新DB状态
+app --> fe: 同步返回受理结果
+app -> app: 异步任务捞起
+app -> model: 生成案件总结 /legalgenius/v1/model/chat/summary //需要包含案件标签
+model --> app: 案件总结
+app -> model: 生成案件价值 /legalgenius/v1/model/chat/value
+model --> app: 案件价值
+end
+
+group 客户查询聊天记录
+fe -> app: /api/v1/query/chatRecordList
+app -> app: 根据用户ID获取聊天记录列表
+app --> fe: 同步返回结果
+end
+
+
+group 预约
+fe -> app: 发起POST请求 /api/v1/reserve
+app -> app: 落DB
+app --> fe: 返回受理成功
+end
+
+
+
+@enduml

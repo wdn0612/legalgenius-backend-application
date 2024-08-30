@@ -1,0 +1,31 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+title 运营后台流程图
+autonumber
+participant 网页APP as fe
+participant 应用层 as app
+
+group 运营登陆
+fe -> app:/api/v1/mng/login
+app -> app: 根据登陆帐密校验
+app --> fe: 返回结果
+end
+
+group 查询历史记录
+fe -> app: /api/v1/mng/query/recordList
+app -> app: 客户咨询记录
+app --> fe: 日期倒序返回
+end
+
+group 查询单个对话记录详情
+fe -> app: /api/v1/mng/query/recordDetail
+app -> app: 根据conversationId获取对话详情
+app --> fe: 返回对话详情
+end
+
+group 更新案例状态
+fe -> app: /api/v1/mng/update/recordStatus
+app -> app: 更新状态
+app --> fe: 返回结果
+end
+@enduml

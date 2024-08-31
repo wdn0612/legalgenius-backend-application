@@ -1,5 +1,5 @@
 /*
- * Ant Group
+ * DN
  * Copyright (c) 2004-2024 All Rights Reserved.
  */
 package com.onereach.legalbot.infrastructure.model;
@@ -19,6 +19,11 @@ public class PartnerInfo {
 
     @Column(name = "partner_name", nullable = false, length = 100)
     private String partnerName;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+    }
 
     // Getters and setters
     public Integer getPartnerId() {

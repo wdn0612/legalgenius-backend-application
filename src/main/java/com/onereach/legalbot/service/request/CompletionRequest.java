@@ -5,6 +5,7 @@
 package com.onereach.legalbot.service.request;
 
 import com.onereach.legalbot.facade.model.Message;
+import com.onereach.legalbot.facade.request.BaseRequest;
 import lombok.Data;
 
 import java.util.List;
@@ -14,7 +15,7 @@ import java.util.List;
  * @version CompletionRequest.java, v 0.1 2024年08月26日 11:13 pm wangdaini
  */
 @Data
-public class CompletionRequest {
+public class CompletionRequest extends BaseRequest {
 
     private List<Message> messageList;
 }

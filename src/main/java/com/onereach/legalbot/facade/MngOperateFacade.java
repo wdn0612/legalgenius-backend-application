@@ -24,6 +24,9 @@ import org.springframework.web.bind.annotation.RequestBody;
  */
 public interface MngOperateFacade {
 
+    ResponseEntity<Boolean> register(@RequestBody LoginRequest request);
+
+
     ResponseEntity<String> login (@RequestBody LoginRequest request);
 
     ResponseEntity<MngQueryRecordListResponse> queryRecordList(RequestEntity<MngQueryRecordListRequest> request);

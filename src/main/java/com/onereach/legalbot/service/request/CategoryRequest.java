@@ -5,6 +5,7 @@
 package com.onereach.legalbot.service.request;
 
 import com.onereach.legalbot.facade.model.Message;
+import com.onereach.legalbot.facade.request.BaseRequest;
 import lombok.Data;
 
 import java.util.List;
@@ -14,6 +15,6 @@ import java.util.List;
  * @version CategoryRequest.java, v 0.1 2024年08月26日 6:34 pm wangdaini
  */
 @Data
-public class CategoryRequest {
+public class CategoryRequest extends BaseRequest {
     private List<Message> messageList;
 }

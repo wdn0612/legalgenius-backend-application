@@ -4,6 +4,7 @@
  */
 package com.onereach.legalbot.service.impl;
 
+import com.onereach.legalbot.core.util.JsonUtil;
 import com.onereach.legalbot.service.ModelService;
 import com.onereach.legalbot.service.request.CalculatePriorityRequest;
 import com.onereach.legalbot.service.request.CategoryRequest;
@@ -14,6 +15,10 @@ import com.onereach.legalbot.service.response.CategoryResponse;
 import com.onereach.legalbot.service.response.CompletionResponse;
 import com.onereach.legalbot.service.response.SummaryResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
@@ -55,5 +60,27 @@ public class ModelServiceImpl implements ModelService {
     @Override
     public CalculatePriorityResponse calculatePriority(CalculatePriorityRequest request) {
         return null;
+    }
+
+    private <T> T callModelApi(String endpoint, Object request, Class<T> responseClazz) {
+        String url = "https://api.example.com/" + endpoint; //todo
+
+        // Create headers
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer 509572ce4e1404eef1458506204495385e4782c89b81525aba3c99a66793f17e"); //todo
+
+        // Create the request entity
+        HttpEntity<Object> entity = new HttpEntity<>(request, headers);
+
+        // Make the HTTP GET request, passing the request entity
+        ResponseEntity<String> response = restTemplate.exchange(
+                url,
+                HttpMethod.POST,
+                entity,
+                String.class
+        );
+
+        // Return the response body
+        return JsonUtil.fromJson(response.getBody(), responseClazz);
     }
 }

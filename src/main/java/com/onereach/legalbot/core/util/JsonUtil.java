@@ -37,7 +37,22 @@ public class JsonUtil {
         }
     }
 
-    public static String serialize(Object obj) throws Exception {
-        return OBJECT_MAPPER.writeValueAsString(obj);
+    public static String toJson(Object obj) {
+        try {
+            String s = OBJECT_MAPPER.writeValueAsString(obj);
+            return s;
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(String.format("error converting json string from object %s", obj.toString()));
+        }
     }
+
+    public static <T> T fromJson(String jsonString, Class<T> clazz) {
+        try {
+            return OBJECT_MAPPER.readValue(jsonString, clazz);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to convert JSON string to object", e);
+        }
+    }
+
+
 }

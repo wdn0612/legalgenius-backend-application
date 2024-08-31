@@ -19,6 +19,7 @@ import lombok.Setter;
 @AllArgsConstructor
 public class LoginRequest extends BaseRequest{
 
+    private Integer partnerId;
     private String username;
     private String password;
 }

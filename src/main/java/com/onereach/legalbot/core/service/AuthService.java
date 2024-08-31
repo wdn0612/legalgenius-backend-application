@@ -1,11 +1,12 @@
 /*
- * DN 
+ * DN
  * Copyright (c) 2004-2024 All Rights Reserved.
  */
 package com.onereach.legalbot.core.service;
 
 import com.onereach.legalbot.infrastructure.PartnerMngUserInfoRepository;
 import com.onereach.legalbot.infrastructure.model.PartnerMngUserInfo;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
@@ -18,6 +19,7 @@ import java.util.UUID;
  * @version AuthService.java, v 0.1 2024年08月30日 8:45 pm wangdaini
  */
 @Service
+@Slf4j
 public class AuthService {
     @Autowired
     private CacheManager cacheManager;
@@ -28,12 +30,13 @@ public class AuthService {
     @Autowired
     private PartnerMngUserInfoRepository partnerMngUserInfoRepository;
 
-    public String login(String username, String password) {
+    public String mngLogin(String username, String password) {
         // 验证用户名和密码
         if (isValidUser(username, password)) {
             // 生成 token
             String token = UUID.randomUUID().toString();
 
+            log.info("生成token, token: {} | user: {}", token, username);
             // 将 token 存储在 Caffeine 缓存中，缓存名为 "tokens"
             cacheManager.getCache("tokens").put(token, username);
 
@@ -41,6 +44,15 @@ public class AuthService {
         } else {
             throw new RuntimeException("Invalid username or password");
         }
+    }
+
+    public String getAccessToken(String userId) {
+        // 生成 token
+        String token = UUID.randomUUID().toString();
+
+        // 将 token 存储在 Caffeine 缓存中，缓存名为 "tokens"
+        cacheManager.getCache("tokens").put(token, userId);
+        return token;
     }
 
     public boolean validateAndRefresh(String token) {

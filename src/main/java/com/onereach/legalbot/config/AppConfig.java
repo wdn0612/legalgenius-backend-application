@@ -4,6 +4,7 @@
  */
 package com.onereach.legalbot.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
@@ -23,6 +24,11 @@ import java.util.concurrent.Executor;
 @EnableJpaRepositories(basePackages = "com.onereach.legalbot.infrastructure")
 @EnableAsync
 public class AppConfig {
+
+    @Value("${isSandBox:}")
+    public String IsSandBox = "0";
+
+
     // Add more configs here
     @Bean
     public RestTemplate restTemplate() {

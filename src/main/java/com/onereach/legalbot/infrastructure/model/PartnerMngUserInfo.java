@@ -1,5 +1,5 @@
 /*
- * Ant Group
+ * DN
  * Copyright (c) 2004-2024 All Rights Reserved.
  */
 package com.onereach.legalbot.infrastructure.model;
@@ -27,6 +27,11 @@ public class PartnerMngUserInfo {
 
     @Column(name = "password_hash", nullable = false, length = 100)
     private String passwordHash;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+    }
 
     // Getters and setters
     public Integer getUserId() {

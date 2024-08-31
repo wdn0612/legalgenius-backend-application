@@ -22,7 +22,7 @@ public class MngUpdateRecordRequest extends BaseRequest{
     private Integer conversationId;
 
     /**
-     * 目前只有 Reserved/Called
+     * 目前只有 RESERVED/CALLED
      */
     private String followupStatus;
     private String remark;

@@ -20,15 +20,4 @@ public class BaseResponse implements Serializable {
 
     private static final long serialVersionUID = 3110461203262829012L;
     private Result result;
-
-    /**
-     * @see Object#toString()
-     */
-    @Override
-    public String toString() {
-        StringBuilder builder = new StringBuilder("BaseResponse [result=");
-        builder.append(result);
-        builder.append("]");
-        return builder.toString();
-    }
 }

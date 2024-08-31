@@ -15,6 +15,9 @@ import com.onereach.legalbot.infrastructure.model.ChatRecord;
 public class ConvertUtil {
 
     public static ChatRecordVO convertToChatRecordVO(ChatRecord chatRecord) {
+        if (chatRecord == null) {
+            return null;
+        }
         ChatRecordVO chatRecordVO = new ChatRecordVO();
         chatRecordVO.setCreatedTime(DateUtil.localDateTimeToUtcString(chatRecord.getCreatedAt()));
         chatRecordVO.setModifiedTime(DateUtil.localDateTimeToUtcString(chatRecord.getModifiedAt()));

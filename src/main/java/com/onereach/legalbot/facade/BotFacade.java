@@ -5,13 +5,13 @@
 package com.onereach.legalbot.facade;
 
 import com.onereach.legalbot.facade.request.ChatRequest;
+import com.onereach.legalbot.facade.request.DouyinLoginRequest;
 import com.onereach.legalbot.facade.request.EndChatRequest;
-import com.onereach.legalbot.facade.request.LoginRequest;
 import com.onereach.legalbot.facade.request.QueryChatRecordListRequest;
 import com.onereach.legalbot.facade.request.ReserveRequest;
 import com.onereach.legalbot.facade.response.ChatResponse;
 import com.onereach.legalbot.facade.response.EndChatResponse;
-import com.onereach.legalbot.facade.response.TikTokLoginResponse;
+import com.onereach.legalbot.facade.response.DouyinLoginResponse;
 import com.onereach.legalbot.facade.response.QueryChatRecordListResponse;
 import com.onereach.legalbot.facade.response.ReserveResponse;
 import org.springframework.http.RequestEntity;
@@ -25,10 +25,11 @@ import org.springframework.http.ResponseEntity;
  */
 public interface BotFacade {
 
-    ResponseEntity<TikTokLoginResponse> login(RequestEntity<LoginRequest> loginRequest);
+    ResponseEntity<DouyinLoginResponse> login(RequestEntity<DouyinLoginRequest> httpRequest);
 
     /**
      * 聊天
+     * 
      * @param httpRequest
      * @return
      */
@@ -36,6 +37,7 @@ public interface BotFacade {
 
     /**
      * 预约
+     * 
      * @param httpRequest
      * @return
      */

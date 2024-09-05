@@ -7,6 +7,8 @@ package com.onereach.legalbot.infrastructure.model;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
+import org.hibernate.annotations.CreationTimestamp;
+
 @Entity
 @Table(name = "user_info")
 public class UserInfo {
@@ -15,6 +17,7 @@ public class UserInfo {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer userId;
 
+    @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -43,7 +46,7 @@ public class UserInfo {
     @Column(name = "platform_country", length = 10)
     private String platformCountry;
 
-    @Column(name = "platform_avartar_url", length = 100)
+    @Column(name = "platform_avatar_url", length = 100)
     private String platformAvatarUrl;
 
     // Getters and setters

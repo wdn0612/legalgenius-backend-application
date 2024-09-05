@@ -23,7 +23,7 @@ public class Result implements Serializable {
 
     private String resultStatus;
     private String resultCode;
-    private String resultMsg;
+    private String resultMessage;
 
     public static Result success() {
         Result result = new Result();

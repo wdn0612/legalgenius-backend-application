@@ -16,12 +16,12 @@ import com.onereach.legalbot.facade.model.Message;
 import com.onereach.legalbot.facade.model.Result;
 import com.onereach.legalbot.facade.request.ChatRequest;
 import com.onereach.legalbot.facade.request.EndChatRequest;
-import com.onereach.legalbot.facade.request.LoginRequest;
+import com.onereach.legalbot.facade.request.DouyinLoginRequest;
 import com.onereach.legalbot.facade.request.QueryChatRecordListRequest;
 import com.onereach.legalbot.facade.request.ReserveRequest;
 import com.onereach.legalbot.facade.response.ChatResponse;
 import com.onereach.legalbot.facade.response.EndChatResponse;
-import com.onereach.legalbot.facade.response.TikTokLoginResponse;
+import com.onereach.legalbot.facade.response.DouyinLoginResponse;
 import com.onereach.legalbot.facade.response.QueryChatRecordListResponse;
 import com.onereach.legalbot.facade.response.ReserveResponse;
 import com.onereach.legalbot.infrastructure.ChatRecordRepository;
@@ -29,7 +29,7 @@ import com.onereach.legalbot.infrastructure.ReservationRepository;
 import com.onereach.legalbot.infrastructure.model.ChatRecord;
 import com.onereach.legalbot.infrastructure.model.Reservation;
 import com.onereach.legalbot.service.ModelService;
-import com.onereach.legalbot.service.TikTokService;
+import com.onereach.legalbot.service.DouyinService;
 import com.onereach.legalbot.service.request.Code2SessionRequest;
 import com.onereach.legalbot.service.request.CompletionRequest;
 import com.onereach.legalbot.service.request.SummaryRequest;
@@ -37,6 +37,8 @@ import com.onereach.legalbot.service.response.Code2SessionResponse;
 import com.onereach.legalbot.service.response.CompletionResponse;
 import com.onereach.legalbot.service.response.SummaryResponse;
 import jakarta.annotation.Resource;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.RequestEntity;
@@ -71,24 +73,35 @@ public class BotFacadeImpl implements BotFacade {
     @Resource
     private AsyncService asyncService;
     @Resource
-    private TikTokService tikTokService;
+    private DouyinService douyinService;
 
     @Resource
     private AuthService authService;
 
+    @Value("${douyin.openapi.appid}")
+    private String appId;
+
+    @Value("${douyin.openapi.appsecret}")
+    private String appSecret;
+
     @Override
-    @PostMapping(path = "/v1/apps/tiktok/login")
-    public ResponseEntity<TikTokLoginResponse> login(RequestEntity<LoginRequest> loginRequest) {
+    @PostMapping(path = "/v1/apps/douyin/login")
+    public ResponseEntity<DouyinLoginResponse> login(RequestEntity<DouyinLoginRequest> httpRequest) {
 
-        return ApiProcessTemplate.execute(loginRequest, new ApiProcessFunction<ResponseEntity<TikTokLoginResponse>>() {
+        return ApiProcessTemplate.execute(httpRequest, new ApiProcessFunction<ResponseEntity<DouyinLoginResponse>>() {
             @Override
-            public ResponseEntity<TikTokLoginResponse> execute() throws Exception {
-                Code2SessionRequest code2SessionRequest = new Code2SessionRequest();
-                code2SessionRequest.setCode(""); // TODO code是个啥
-                code2SessionRequest.setAppid(""); // TODO 需要根据机构维度判断AppId，前端是否感知？
-                code2SessionRequest.setSecret(""); // TODO 需要根据机构维度判断Secret，前端是否感知？
+            public ResponseEntity<DouyinLoginResponse> execute() throws Exception {
+                DouyinLoginRequest body = httpRequest.getBody();
 
-                Code2SessionResponse response = tikTokService.code2Session(code2SessionRequest);
+                if (body == null || body.getCode() == null) {
+                    throw new RuntimeException("code is required.");
+                }
+
+                Code2SessionRequest code2SessionRequest = new Code2SessionRequest();
+                code2SessionRequest.setCode(body.getCode());
+                code2SessionRequest.setAppid(appId);
+                code2SessionRequest.setSecret(appSecret); // TODO 需要根据机构维度判断Secret，前端是否感知？
+                Code2SessionResponse response = douyinService.code2Session(code2SessionRequest);
                 // 对返回数据异常处理
                 if (response == null || response.getData() == null) {
                     // 返回异常梳理
@@ -96,33 +109,34 @@ public class BotFacadeImpl implements BotFacade {
                 }
                 if (response.getErrNo() != 0) {
                     // 返回异常结果msg
-                    throw new RuntimeException(String.format("tik tok code2session with error msg %s", response.getErrTips()));
+                    throw new RuntimeException(
+                            String.format("tik tok code2session with error msg %s", response.getErrTips()));
                 }
-
 
                 String token = authService.getAccessToken(response.getData().getOpenid());
 
-                TikTokLoginResponse tikTokLoginResponse = new TikTokLoginResponse();
-                tikTokLoginResponse.setOpenId(response.getData().getOpenid());
-                tikTokLoginResponse.setUnionId(response.getData().getUnionId());
-                tikTokLoginResponse.setToken(token);
-                tikTokLoginResponse.setResult(Result.success());
+                DouyinLoginResponse douyinLoginResponse = new DouyinLoginResponse();
+                douyinLoginResponse.setOpenId(response.getData().getOpenid());
+                douyinLoginResponse.setUnionId(response.getData().getUnionId());
+                douyinLoginResponse.setToken(token);
+                douyinLoginResponse.setResult(Result.success());
 
                 HttpHeaders responseHeaders = new HttpHeaders();
                 responseHeaders.setContentType(MediaType.APPLICATION_JSON);
-                return new ResponseEntity<TikTokLoginResponse>(tikTokLoginResponse, responseHeaders,200);
+                return new ResponseEntity<DouyinLoginResponse>(douyinLoginResponse, responseHeaders, 200);
             }
 
             @Override
-            public ResponseEntity<TikTokLoginResponse> handleException(ResponseEntity<TikTokLoginResponse> result, Exception e) {
-                TikTokLoginResponse tikTokLoginResponse = new TikTokLoginResponse();
+            public ResponseEntity<DouyinLoginResponse> handleException(ResponseEntity<DouyinLoginResponse> result,
+                    Exception e) {
+                DouyinLoginResponse douyinLoginResponse = new DouyinLoginResponse();
                 Result failResult = Result.fail();
-                failResult.setResultMsg(e.getMessage());
-                tikTokLoginResponse.setResult(failResult);
+                failResult.setResultMessage(e.getMessage());
+                douyinLoginResponse.setResult(failResult);
 
                 HttpHeaders responseHeaders = new HttpHeaders();
                 responseHeaders.setContentType(MediaType.APPLICATION_JSON);
-                return new ResponseEntity<TikTokLoginResponse>(tikTokLoginResponse, responseHeaders,200);
+                return new ResponseEntity<DouyinLoginResponse>(douyinLoginResponse, responseHeaders, 200);
             }
         });
     }
@@ -201,7 +215,7 @@ public class BotFacadeImpl implements BotFacade {
                         Result resultResult = new Result();
                         resultResult.setResultStatus("F");
                         resultResult.setResultCode("FAIL");
-                        resultResult.setResultMsg(e.getMessage());
+                        resultResult.setResultMessage(e.getMessage());
                         chatResponse.setResult(resultResult);
 
                         HttpHeaders responseHeaders = new HttpHeaders();
@@ -254,7 +268,7 @@ public class BotFacadeImpl implements BotFacade {
 
                         resultResult.setResultStatus("F");
                         resultResult.setResultCode("FAIL");
-                        resultResult.setResultMsg(e.getMessage());
+                        resultResult.setResultMessage(e.getMessage());
                         response.setResult(resultResult);
 
                         HttpHeaders responseHeaders = new HttpHeaders();
@@ -292,7 +306,7 @@ public class BotFacadeImpl implements BotFacade {
 
                         resultResult.setResultStatus("F");
                         resultResult.setResultCode("FAIL");
-                        resultResult.setResultMsg(e.getMessage());
+                        resultResult.setResultMessage(e.getMessage());
                         response.setResult(resultResult);
 
                         HttpHeaders responseHeaders = new HttpHeaders();
@@ -335,7 +349,7 @@ public class BotFacadeImpl implements BotFacade {
 
                         resultResult.setResultStatus("F");
                         resultResult.setResultCode("FAIL");
-                        resultResult.setResultMsg(e.getMessage());
+                        resultResult.setResultMessage(e.getMessage());
                         response.setResult(resultResult);
 
                         HttpHeaders responseHeaders = new HttpHeaders();

@@ -18,7 +18,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class TikTokLoginResponse extends BaseResponse{
+public class DouyinLoginResponse extends BaseResponse {
 
     private String openId;
     private String unionId;

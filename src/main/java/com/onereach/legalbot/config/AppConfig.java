@@ -28,8 +28,15 @@ public class AppConfig {
     @Value("${isSandBox:}")
     public String IsSandBox = "0";
 
+    @Value("${app.env}")
+    public String appEnv = "test";
 
-    // Add more configs here
+    @Value("${douyin.openapi.appid}")
+    public String douyinOpenApiAppid;
+
+    @Value("${douyin.openapi.appsecret}")
+    public String douyinOpenApiAppsecret;
+
     @Bean
     public RestTemplate restTemplate() {
         return new RestTemplate();

@@ -38,7 +38,12 @@ public class AuthService {
 
             log.info("生成token, token: {} | user: {}", token, username);
             // 将 token 存储在 Caffeine 缓存中，缓存名为 "tokens"
-            cacheManager.getCache("tokens").put(token, username);
+            Cache cache = cacheManager.getCache("tokens");
+            if (cache != null) {
+                cache.put(token, username);
+            } else {
+                throw new RuntimeException("Cache is null");
+            }
 
             return token;
         } else {

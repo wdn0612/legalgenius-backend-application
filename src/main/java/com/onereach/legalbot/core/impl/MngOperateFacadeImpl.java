@@ -62,6 +62,7 @@ public class MngOperateFacadeImpl implements MngOperateFacade {
 
     @Resource
     private PartnerMngUserInfoRepository partnerMngUserInfoRepository;
+
     @Override
     @PostMapping("/v1/mng/register")
     public ResponseEntity<Boolean> register(LoginRequest request) {
@@ -159,7 +160,7 @@ public class MngOperateFacadeImpl implements MngOperateFacade {
 
                         resultResult.setResultStatus("F");
                         resultResult.setResultCode("FAIL");
-                        resultResult.setResultMsg(e.getMessage());
+                        resultResult.setResultMessage(e.getMessage());
                         response.setResult(resultResult);
 
                         HttpHeaders responseHeaders = new HttpHeaders();
@@ -169,7 +170,7 @@ public class MngOperateFacadeImpl implements MngOperateFacade {
                                 responseHeaders, 200);
                     }
 
-                    ;
+                ;
                 });
     }
 
@@ -209,7 +210,7 @@ public class MngOperateFacadeImpl implements MngOperateFacade {
 
                         resultResult.setResultStatus("F");
                         resultResult.setResultCode("FAIL");
-                        resultResult.setResultMsg(e.getMessage());
+                        resultResult.setResultMessage(e.getMessage());
                         response.setResult(resultResult);
 
                         HttpHeaders responseHeaders = new HttpHeaders();
@@ -259,7 +260,7 @@ public class MngOperateFacadeImpl implements MngOperateFacade {
 
                         resultResult.setResultStatus("F");
                         resultResult.setResultCode("FAIL");
-                        resultResult.setResultMsg(e.getMessage());
+                        resultResult.setResultMessage(e.getMessage());
                         response.setResult(resultResult);
 
                         return new ResponseEntity<MngUpdateRecordResponse>(response,

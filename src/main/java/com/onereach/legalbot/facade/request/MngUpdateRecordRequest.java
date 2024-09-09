@@ -4,6 +4,8 @@
  */
 package com.onereach.legalbot.facade.request;
 
+import com.onereach.legalbot.infrastructure.model.enums.FollowupStatus;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,13 +19,13 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class MngUpdateRecordRequest extends BaseRequest{
+public class MngUpdateRecordRequest extends BaseRequest {
 
     private Integer conversationId;
 
     /**
      * 目前只有 RESERVED/CALLED
      */
-    private String followupStatus;
+    private FollowupStatus followupStatus;
     private String remark;
 }

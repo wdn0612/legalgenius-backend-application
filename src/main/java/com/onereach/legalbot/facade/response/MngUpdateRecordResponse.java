@@ -9,6 +9,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import com.onereach.legalbot.infrastructure.model.enums.FollowupStatus;
+
 /**
  * @author wangdaini
  * @version MngUpdateRecordResponse.java, v 0.1 2024年08月27日 10:52 pm wangdaini
@@ -17,12 +19,12 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class MngUpdateRecordResponse extends BaseResponse{
+public class MngUpdateRecordResponse extends BaseResponse {
     private Integer conversationId;
 
     /**
      * 目前只有 Reserved/Called
      */
-    private String followupStatus;
+    private FollowupStatus followupStatus;
     private String remark;
 }

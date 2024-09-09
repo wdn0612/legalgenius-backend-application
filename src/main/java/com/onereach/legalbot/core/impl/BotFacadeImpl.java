@@ -10,6 +10,7 @@ import com.onereach.legalbot.core.template.ApiProcessFunction;
 import com.onereach.legalbot.core.template.ApiProcessTemplate;
 import com.onereach.legalbot.core.util.ConvertUtil;
 import com.onereach.legalbot.core.util.JsonUtil;
+import com.onereach.legalbot.core.util.DouyinEncryptionUtil;
 import com.onereach.legalbot.facade.BotFacade;
 import com.onereach.legalbot.facade.model.ChatRecordVO;
 import com.onereach.legalbot.facade.model.Message;
@@ -19,16 +20,26 @@ import com.onereach.legalbot.facade.request.EndChatRequest;
 import com.onereach.legalbot.facade.request.DouyinLoginRequest;
 import com.onereach.legalbot.facade.request.QueryChatRecordListRequest;
 import com.onereach.legalbot.facade.request.ReserveRequest;
+import com.onereach.legalbot.facade.request.UpdateProfileRequest;
+import com.onereach.legalbot.facade.response.BaseResponse;
 import com.onereach.legalbot.facade.response.ChatResponse;
 import com.onereach.legalbot.facade.response.EndChatResponse;
 import com.onereach.legalbot.facade.response.DouyinLoginResponse;
 import com.onereach.legalbot.facade.response.QueryChatRecordListResponse;
 import com.onereach.legalbot.facade.response.ReserveResponse;
-import com.onereach.legalbot.infrastructure.ChatRecordRepository;
-import com.onereach.legalbot.infrastructure.ReservationRepository;
+import com.onereach.legalbot.infrastructure.repository.ChatRecordRepository;
+import com.onereach.legalbot.infrastructure.repository.ReservationRepository;
+import com.onereach.legalbot.infrastructure.repository.UserRepository;
+import com.onereach.legalbot.infrastructure.repository.UserPlatformAccountRepository;
+import com.onereach.legalbot.infrastructure.repository.UserSessionRepository;
+import com.onereach.legalbot.infrastructure.model.User;
+import com.onereach.legalbot.infrastructure.model.UserPlatformAccount;
+import com.onereach.legalbot.infrastructure.model.UserSession;
 import com.onereach.legalbot.infrastructure.model.ChatRecord;
 import com.onereach.legalbot.infrastructure.model.Reservation;
+import com.onereach.legalbot.infrastructure.model.enums.*;
 import com.onereach.legalbot.service.ModelService;
+import com.onereach.legalbot.service.model.PhoneNumberData;
 import com.onereach.legalbot.service.DouyinService;
 import com.onereach.legalbot.service.request.Code2SessionRequest;
 import com.onereach.legalbot.service.request.CompletionRequest;
@@ -36,9 +47,14 @@ import com.onereach.legalbot.service.request.SummaryRequest;
 import com.onereach.legalbot.service.response.Code2SessionResponse;
 import com.onereach.legalbot.service.response.CompletionResponse;
 import com.onereach.legalbot.service.response.SummaryResponse;
+import com.fasterxml.jackson.databind.JsonSerializable.Base;
+import com.onereach.legalbot.config.AppConfig;
 import jakarta.annotation.Resource;
+import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.security.SecurityProperties;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.RequestEntity;
@@ -58,6 +74,7 @@ import static com.onereach.legalbot.core.constant.CommonConstant.SYSTEM;
  * @author wangdaini
  * @version UserFacadeImpl.java, v 0.1 2024年08月25日 9:24 pm wangdaini
  */
+@Slf4j
 @RestController
 public class BotFacadeImpl implements BotFacade {
 
@@ -68,21 +85,25 @@ public class BotFacadeImpl implements BotFacade {
     private ReservationRepository reservationRepository;
 
     @Resource
+    private UserRepository userRepository;
+
+    @Resource
+    private UserSessionRepository userSessionRepository;
+
+    @Resource
+    private UserPlatformAccountRepository userPlatformAccountRepository;
+
+    @Resource
     private ModelService modelService;
 
     @Resource
     private AsyncService asyncService;
+
     @Resource
     private DouyinService douyinService;
 
     @Resource
     private AuthService authService;
-
-    @Value("${douyin.openapi.appid}")
-    private String appId;
-
-    @Value("${douyin.openapi.appsecret}")
-    private String appSecret;
 
     @Override
     @PostMapping(path = "/v1/apps/douyin/login")
@@ -97,27 +118,70 @@ public class BotFacadeImpl implements BotFacade {
                     throw new RuntimeException("code is required.");
                 }
 
+                // 调用 douyin code2session 接口，获取 openid 和 session_key
                 Code2SessionRequest code2SessionRequest = new Code2SessionRequest();
                 code2SessionRequest.setCode(body.getCode());
-                code2SessionRequest.setAppid(appId);
-                code2SessionRequest.setSecret(appSecret); // TODO 需要根据机构维度判断Secret，前端是否感知？
-                Code2SessionResponse response = douyinService.code2Session(code2SessionRequest);
+                Code2SessionResponse code2SessionResponse = douyinService.code2Session(code2SessionRequest);
                 // 对返回数据异常处理
-                if (response == null || response.getData() == null) {
-                    // 返回异常梳理
-
-                }
-                if (response.getErrNo() != 0) {
-                    // 返回异常结果msg
-                    throw new RuntimeException(
-                            String.format("tik tok code2session with error msg %s", response.getErrTips()));
+                if (code2SessionResponse == null || code2SessionResponse.getData() == null
+                        || code2SessionResponse.getErrNo() != 0) {
+                    throw new RuntimeException("douyin code2session return error. ");
                 }
 
-                String token = authService.getAccessToken(response.getData().getOpenid());
+                // 通过 openid 和 platform 查询用户信息
+                // 注：抖音 openid 在我们系统中被记录为：platform=dy_open, platformUserId=openid
+                String openId = code2SessionResponse.getData().getOpenid();
+                Platform platform = Platform.DY_OPEN;
+                UserPlatformAccount userPlatformAccount = userPlatformAccountRepository
+                        .findByPlatformUserIdAndPlatform(openId, platform);
+                if (userPlatformAccount == null) {
+                    // 先创建一个空用户
+                    User user = userRepository.save(new User());
 
+                    // 创建一个新的 platform account
+                    userPlatformAccount = new UserPlatformAccount();
+                    userPlatformAccount.setUser(user);
+                    userPlatformAccount.setPlatform(platform);
+                    userPlatformAccount.setPlatformUserId(openId);
+                    userPlatformAccountRepository.save(userPlatformAccount);
+                }
+
+                // 同时我们也会记录用户的 unionId
+                String unionId = code2SessionResponse.getData().getUnionId();
+                Platform unionPlatform = Platform.DY_UNION;
+                UserPlatformAccount unionPlatformAccount = userPlatformAccountRepository
+                        .findByPlatformUserIdAndPlatform(unionId, unionPlatform);
+                if (unionPlatformAccount == null) {
+                    // 创建一个新的 platform account
+                    unionPlatformAccount = new UserPlatformAccount();
+                    unionPlatformAccount.setUser(userPlatformAccount.getUser());
+                    unionPlatformAccount.setPlatform(unionPlatform);
+                    unionPlatformAccount.setPlatformUserId(unionId);
+                    userPlatformAccountRepository.save(unionPlatformAccount);
+                }
+
+                // 在数据库 user_session 当中记录用户在前端的登录态信息, userId + scene 作为唯一标识
+                Scene scene = body.getScene();
+                Integer userId = userPlatformAccount.getUser().getUserId();
+
+                if (userSessionRepository.findByUser_UserIdAndScene(userId, scene) == null) {
+                    // 如果数据库中没有该用户的登录态信息，则 create 一个新的登录态信息
+                    UserSession userSession = new UserSession();
+                    userSession.setUser(userPlatformAccount.getUser());
+                    userSession.setScene(scene);
+                    userSession.setSceneSessionKey(code2SessionResponse.getData().getSessionKey());
+                    userSessionRepository.save(userSession);
+                } else {
+                    // 如果数据库中有该用户的登录态信息，则更新 sessionKey
+                    UserSession userSession = userSessionRepository.findByUser_UserIdAndScene(userId, scene);
+                    userSession.setSceneSessionKey(code2SessionResponse.getData().getSessionKey());
+                    userSessionRepository.save(userSession);
+                }
+
+                // 生成 token，返回给前端，改 token 后续查找该用户的 session key
+                User user = userPlatformAccount.getUser();
+                String token = authService.generateTokenForUser(user);
                 DouyinLoginResponse douyinLoginResponse = new DouyinLoginResponse();
-                douyinLoginResponse.setOpenId(response.getData().getOpenid());
-                douyinLoginResponse.setUnionId(response.getData().getUnionId());
                 douyinLoginResponse.setToken(token);
                 douyinLoginResponse.setResult(Result.success());
 
@@ -137,6 +201,99 @@ public class BotFacadeImpl implements BotFacade {
                 HttpHeaders responseHeaders = new HttpHeaders();
                 responseHeaders.setContentType(MediaType.APPLICATION_JSON);
                 return new ResponseEntity<DouyinLoginResponse>(douyinLoginResponse, responseHeaders, 200);
+            }
+        });
+    }
+
+    // @Override
+    @PostMapping(path = "/v1/apps/douyin/updateProfile")
+    public ResponseEntity<BaseResponse> updateProfile(@Valid RequestEntity<UpdateProfileRequest> httpRequest) {
+        return ApiProcessTemplate.execute(httpRequest, new ApiProcessFunction<ResponseEntity<BaseResponse>>() {
+            @Override
+            public ResponseEntity<BaseResponse> execute() throws Exception {
+
+                UpdateProfileRequest body = httpRequest.getBody();
+                if (body == null) {
+                    throw new RuntimeException("request body is required.");
+                }
+
+                UpdateProfileType type = body.getType();
+                Scene scene = body.getScene();
+                String jwtToken = httpRequest.getHeaders().getFirst("Authorization");
+
+                if (jwtToken == null || !jwtToken.startsWith("Bearer ")) {
+                    throw new RuntimeException("Authorization header is required.");
+                }
+                jwtToken = jwtToken.substring(7); // 剔除 Bearer
+
+                Integer userId = authService.getUserIdFromToken(jwtToken);
+
+                // 根据 userId 查询用户信息
+                UserSession userSession = userSessionRepository.findByUser_UserIdAndScene(userId, scene);
+                if (userSession == null) {
+                    throw new RuntimeException("user session not found.");
+                }
+
+                if (type == UpdateProfileType.USERPROFILE) {
+                    // 根据用户 openId, 更新用户 platform account 信息
+                    User user = userSession.getUser();
+                    UserPlatformAccount userPlatformAccount = userPlatformAccountRepository
+                            .findByUser_UserIdAndPlatform(
+                                    user.getUserId(), Platform.DY_OPEN);
+                    String platformUserName = body.getUserName();
+                    String platformGender = body.getGender();
+                    String platformCity = body.getCity();
+                    String platformProvince = body.getProvince();
+                    String platformCountry = body.getCountry();
+                    String platformAvatarUrl = body.getAvatarUrl();
+
+                    userPlatformAccount.setPlatformUserName(platformUserName);
+                    userPlatformAccount.setPlatformGender(platformGender);
+                    userPlatformAccount.setPlatformCity(platformCity);
+                    userPlatformAccount.setPlatformProvince(platformProvince);
+                    userPlatformAccount.setPlatformCountry(platformCountry);
+                    userPlatformAccount.setPlatformAvatarUrl(platformAvatarUrl);
+                    userPlatformAccountRepository.save(userPlatformAccount);
+
+                } else if (type == UpdateProfileType.PHONENUMBER) {
+                    String sessionKey = userSession.getSceneSessionKey();
+                    String iv = body.getIv();
+                    String encryptedData = body.getEncryptedData();
+
+                    String decryptedData = DouyinEncryptionUtil.decrypt(encryptedData, sessionKey, iv);
+                    log.info("decryptedData: {}", decryptedData);
+
+                    PhoneNumberData phoneNumberData = JsonUtil.fromJson(decryptedData, PhoneNumberData.class);
+                    String phoneNumber = phoneNumberData.getPhoneNumber();
+
+                    // 更新用户手机号
+                    User user = userSession.getUser();
+                    user.setPhoneNumber(phoneNumber);
+                    userRepository.save(user);
+                } else {
+                    throw new RuntimeException("type not supported.");
+                }
+
+                BaseResponse baseResponse = new BaseResponse();
+                baseResponse.setResult(Result.success());
+
+                HttpHeaders responseHeaders = new HttpHeaders();
+                responseHeaders.setContentType(MediaType.APPLICATION_JSON);
+                return new ResponseEntity<BaseResponse>(baseResponse, responseHeaders, 200);
+
+            }
+
+            @Override
+            public ResponseEntity<BaseResponse> handleException(ResponseEntity<BaseResponse> result, Exception e) {
+
+                BaseResponse baseResponse = new BaseResponse();
+                Result failResult = Result.fail();
+                failResult.setResultMessage(e.getMessage());
+                baseResponse.setResult(failResult);
+
+                HttpHeaders responseHeaders = new HttpHeaders();
+                responseHeaders.setContentType(MediaType.APPLICATION_JSON);
+                return new ResponseEntity<BaseResponse>(baseResponse, responseHeaders, 200);
             }
         });
     }
@@ -165,9 +322,9 @@ public class BotFacadeImpl implements BotFacade {
                             ChatRecord newChatRecord = new ChatRecord();
                             newChatRecord.setCreatedAt(LocalDateTime.now());
                             newChatRecord.setModifiedAt(LocalDateTime.now());
-                            newChatRecord.setUserId(body.getUserId());
-                            newChatRecord.setPartnerId(0); // TODO 目前API里没有
-                            newChatRecord.setPlatform(""); // TODO 目前API里没有
+                            newChatRecord.getUser().setUserId(body.getUserId());
+                            newChatRecord.getPartner().setPartnerId(0);
+                            newChatRecord.setScene(body.getScene());
                             newChatRecord.setMessage(JsonUtil.listToJsonArrayStr(conversation));
                             newChatRecord.setReservationIntent(false);
 
@@ -188,7 +345,7 @@ public class BotFacadeImpl implements BotFacade {
                         CompletionResponse completionResponse = modelService.complete(
                                 completionRequest);
                         String completion = completionResponse.getSystemCompletion();
-                        conversation.add(new Message(SYSTEM, completion));
+                        conversation.add(new Message(Role.ASSISTANT, completion));
                         chatRecord.setMessage(JsonUtil.listToJsonArrayStr(conversation));
                         chatRecord.setReservationIntent(completionResponse.isReservationIntent());
 
@@ -215,6 +372,8 @@ public class BotFacadeImpl implements BotFacade {
                         Result resultResult = new Result();
                         resultResult.setResultStatus("F");
                         resultResult.setResultCode("FAIL");
+
+                        // TODO: backend errors exposed to frontend, seems dangerous.
                         resultResult.setResultMessage(e.getMessage());
                         chatResponse.setResult(resultResult);
 
@@ -237,8 +396,8 @@ public class BotFacadeImpl implements BotFacade {
 
                         ReserveRequest reserveRequest = httpRequest.getBody();
                         Reservation reservation = new Reservation();
-                        reservation.setUserId(reserveRequest.getUserId());
-                        reservation.setChatId(reserveRequest.getConversationId());
+                        reservation.getUser().setUserId(reserveRequest.getUserId());
+                        reservation.getChatRecord().setChatId(reserveRequest.getConversationId());
                         reservation.setReservationDate(LocalDateTime.now());
                         reservation.setCreatedAt(LocalDateTime.now());
 
@@ -325,7 +484,7 @@ public class BotFacadeImpl implements BotFacade {
                 new ApiProcessFunction<ResponseEntity<QueryChatRecordListResponse>>() {
                     @Override
                     public ResponseEntity<QueryChatRecordListResponse> execute() throws Exception {
-                        List<ChatRecord> chatRecords = chatRecordRepository.findByUserIdOrderByCreatedAtDesc(
+                        List<ChatRecord> chatRecords = chatRecordRepository.findByUser_UserIdOrderByCreatedAtDesc(
                                 request.getBody().getUserId());
                         List<ChatRecordVO> chatRecordVOList = chatRecords.stream()
                                 .map(ConvertUtil::convertToChatRecordVO)

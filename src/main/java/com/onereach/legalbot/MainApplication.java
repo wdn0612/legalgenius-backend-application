@@ -1,6 +1,6 @@
 package com.onereach.legalbot;
 
-import com.onereach.legalbot.infrastructure.ChatRecordRepository;
+import com.onereach.legalbot.infrastructure.repository.ChatRecordRepository;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.SpringApplication;

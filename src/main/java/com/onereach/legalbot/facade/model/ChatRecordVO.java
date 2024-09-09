@@ -28,7 +28,7 @@ public class ChatRecordVO implements Serializable {
     private Integer conversationId;
     private Integer userId;
     private Integer partnerId;
-    private String platform;
+    private String scene;
     private List<Message> message;
     private boolean reserved;
     private String category;
@@ -52,8 +52,8 @@ public class ChatRecordVO implements Serializable {
         builder.append(userId);
         builder.append(", partnerId=");
         builder.append(partnerId);
-        builder.append(", platform='");
-        builder.append(platform).append("'");
+        builder.append(", scene='");
+        builder.append(scene).append("'");
         builder.append(", message=");
         builder.append(message);
         builder.append(", reserved=");

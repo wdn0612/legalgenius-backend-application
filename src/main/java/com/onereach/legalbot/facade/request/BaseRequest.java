@@ -6,6 +6,8 @@ package com.onereach.legalbot.facade.request;
 
 import lombok.Data;
 
+import com.onereach.legalbot.infrastructure.model.enums.Scene;
+
 import java.io.Serializable;
 
 /**
@@ -20,7 +22,7 @@ public class BaseRequest implements Serializable {
     /**
      * 场景
      */
-    private String scene;
+    private Scene scene;
 
     /**
      * 机构

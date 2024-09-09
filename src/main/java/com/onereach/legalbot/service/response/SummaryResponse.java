@@ -5,13 +5,15 @@
 package com.onereach.legalbot.service.response;
 
 import com.onereach.legalbot.facade.model.Result;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * @author wangdaini
  * @version SummaryResponse.java, v 0.1 2024年08月26日 6:35 pm wangdaini
  */
-@Data
+@Getter
+@Setter
 public class SummaryResponse extends Result {
 
     private String summary;

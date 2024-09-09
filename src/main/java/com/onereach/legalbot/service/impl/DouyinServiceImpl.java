@@ -10,7 +10,13 @@ import com.onereach.legalbot.service.request.Code2SessionRequest;
 import com.onereach.legalbot.service.response.Code2SessionResponse;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
 
 /**
  *
@@ -24,19 +30,26 @@ public class DouyinServiceImpl implements DouyinService {
     @Resource
     private AppConfig appConfig;
 
+    private final RestTemplate restTemplate;
+
+    public DouyinServiceImpl(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
+    }
+
     @Override
     public Code2SessionResponse code2Session(Code2SessionRequest code2SessionRequest) {
-        // code2session的http请求 TODO 常量化
-        // String domain = "https://developer.toutiao.com";
-        // if (appConfig.IsSandBox.equals("1")) {
-        // domain = "https://open-sandbox.douyin.com";
-        // }
-        //
-        // String code2SessionPath = "/api/apps/v2/jscode2session";
-        // Code2SessionResponse response = HttpUtil.HttpPost(code2SessionPath,
-        // gson.toJson(code2SessionRequest), "https", domain,
-        // Code2SessionResponse.class);
 
-        return null;
+        String domain = appConfig.douyinOpenApiDomain;
+        String appid = appConfig.douyinOpenApiAppid;
+        String secret = appConfig.douyinOpenApiAppsecret;
+
+        String code2SessionPath = "/api/apps/v2/jscode2session";
+        code2SessionRequest.setAppid(appid);
+        code2SessionRequest.setSecret(secret);
+
+        // 向抖音服务器发送请求
+        Code2SessionResponse code2SessionResponse = restTemplate
+                .postForEntity(domain + code2SessionPath, code2SessionRequest, Code2SessionResponse.class).getBody();
+        return code2SessionResponse;
     }
 }

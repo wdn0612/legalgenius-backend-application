@@ -4,15 +4,23 @@
  */
 package com.onereach.legalbot.core.service;
 
-import com.onereach.legalbot.infrastructure.PartnerMngUserInfoRepository;
-import com.onereach.legalbot.infrastructure.model.PartnerMngUserInfo;
+import com.onereach.legalbot.infrastructure.repository.PartnerUserRepository;
+import com.onereach.legalbot.infrastructure.model.PartnerUser;
+import com.onereach.legalbot.infrastructure.model.User;
+import com.onereach.legalbot.config.AppConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
+import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
 
 import java.util.UUID;
+import java.util.Date;
 
 /**
  * @author wangdaini
@@ -28,7 +36,10 @@ public class AuthService {
     private UserPasswordService userPasswordService;
 
     @Autowired
-    private PartnerMngUserInfoRepository partnerMngUserInfoRepository;
+    private PartnerUserRepository partnerUserRepository;
+
+    @Autowired
+    private AppConfig appConfig;
 
     public String mngLogin(String username, String password) {
         // 验证用户名和密码
@@ -51,13 +62,58 @@ public class AuthService {
         }
     }
 
-    public String getAccessToken(String userId) {
-        // 生成 token
-        String token = UUID.randomUUID().toString();
+    // public String getAccessToken(String userId) {
+    // // 生成 token
+    // String token = UUID.randomUUID().toString();
 
-        // 将 token 存储在 Caffeine 缓存中，缓存名为 "tokens"
-        cacheManager.getCache("tokens").put(token, userId);
+    // // 将 token 存储在 Caffeine 缓存中，缓存名为 "tokens"
+    // cacheManager.getCache("tokens").put(token, userId);
+    // return token;
+    // }
+
+    public String generateTokenForUser(User user) {
+        Long jwtExpirationDays = appConfig.jwtExpirationDays;
+        String jwtSecret = appConfig.jwtSecret;
+
+        Date now = new Date();
+        Date expiration = new Date(now.getTime() + jwtExpirationDays * 24L * 60L * 60L * 1000L);
+
+        log.info("Generating token for user: {}", user.getUserId());
+        log.info("Token expiration: {}", expiration);
+
+        SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
+
+        String token = Jwts.builder()
+                .setSubject(user.getUserId().toString())
+                .setIssuedAt(now)
+                .setExpiration(expiration)
+                .signWith(key, SignatureAlgorithm.HS256)
+                .compact();
+
         return token;
+    }
+
+    public boolean validateToken(String token) {
+        try {
+            SecretKey key = Keys.hmacShaKeyFor(appConfig.jwtSecret.getBytes(StandardCharsets.UTF_8));
+            Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
+            return true;
+        } catch (io.jsonwebtoken.ExpiredJwtException e) {
+            log.error("Token expired", e);
+            return false;
+        } catch (io.jsonwebtoken.security.SignatureException e) {
+            log.error("Invalid token signature", e);
+            return false;
+        } catch (Exception e) {
+            log.error("Token validation error", e);
+            return false;
+        }
+    }
+
+    public Integer getUserIdFromToken(String token) {
+        SecretKey key = Keys.hmacShaKeyFor(appConfig.jwtSecret.getBytes());
+        return Integer
+                .parseInt(Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody().getSubject());
     }
 
     public boolean validateAndRefresh(String token) {
@@ -74,8 +130,8 @@ public class AuthService {
 
     private boolean isValidUser(String username, String password) {
         // 这里可以是数据库查询或其他验证逻辑
-        PartnerMngUserInfo mngUserInfo = partnerMngUserInfoRepository.findByUserName(username);
-        return userPasswordService.matches(password, mngUserInfo.getPasswordHash());
+        PartnerUser partnerUser = partnerUserRepository.findByUserName(username);
+        return userPasswordService.matches(password, partnerUser.getPasswordHash());
 
     }
 }

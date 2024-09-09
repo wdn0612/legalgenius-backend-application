@@ -6,7 +6,7 @@ package com.onereach.legalbot.core.async;
 
 import com.onereach.legalbot.core.util.JsonUtil;
 import com.onereach.legalbot.facade.model.Message;
-import com.onereach.legalbot.infrastructure.ChatRecordRepository;
+import com.onereach.legalbot.infrastructure.repository.ChatRecordRepository;
 import com.onereach.legalbot.infrastructure.model.ChatRecord;
 import com.onereach.legalbot.service.ModelService;
 import com.onereach.legalbot.service.request.CalculatePriorityRequest;
@@ -43,20 +43,20 @@ public class AsyncService {
             String message = chatRecord.getMessage();
             List<Message> conversation = JsonUtil.jsonArrayToObjectList(message, Message.class);
 
-            //生成总结
+            // 生成总结
             SummaryRequest summaryRequest = new SummaryRequest();
             summaryRequest.setSummaryType("CONVERSATION");
             summaryRequest.setMessageList(conversation);
             SummaryResponse summaryResponse = modelService.summarize(summaryRequest);
             String summary = summaryResponse.getSummary();
 
-            //生成标签
+            // 生成标签
             CategoryRequest categoryRequest = new CategoryRequest();
             categoryRequest.setMessageList(conversation);
             CategoryResponse categoryResponse = modelService.categorize(categoryRequest);
             String category = categoryResponse.getCategory();
 
-            //生成优先级
+            // 生成优先级
             CalculatePriorityRequest priorityRequest = new CalculatePriorityRequest();
             priorityRequest.setMessageList(conversation);
             CalculatePriorityResponse calculatePriorityResponse = modelService.calculatePriority(priorityRequest);

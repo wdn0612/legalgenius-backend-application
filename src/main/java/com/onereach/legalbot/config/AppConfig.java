@@ -37,6 +37,15 @@ public class AppConfig {
     @Value("${douyin.openapi.appsecret}")
     public String douyinOpenApiAppsecret;
 
+    @Value("${douyin.openapi.domain}")
+    public String douyinOpenApiDomain;
+
+    @Value("${jwt.secret}")
+    public String jwtSecret;
+
+    @Value("${jwt.expiration.days}")
+    public Long jwtExpirationDays;
+
     @Bean
     public RestTemplate restTemplate() {
         return new RestTemplate();

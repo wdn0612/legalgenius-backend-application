@@ -8,6 +8,7 @@ import com.onereach.legalbot.facade.model.Message;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
@@ -21,7 +22,8 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ChatRequest extends BaseRequest{
+@EqualsAndHashCode(callSuper = true)
+public class ChatRequest extends BaseRequest {
 
     private static final long serialVersionUID = -5483095475122785625L;
 

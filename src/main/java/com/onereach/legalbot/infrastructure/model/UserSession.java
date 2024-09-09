@@ -1,75 +1,38 @@
-/*
- * DN 
- * Copyright (c) 2004-2024 All Rights Reserved.
- */
 package com.onereach.legalbot.infrastructure.model;
 
+import lombok.Data;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import com.onereach.legalbot.infrastructure.model.enums.Scene;
 
 @Entity
 @Table(name = "user_session")
+@Data
 public class UserSession {
 
     @Id
-    private Integer userId;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer sessionId;
 
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false, referencedColumnName = "user_id")
+    private User user;
+
+    @Column(name = "scene", length = 10)
     @Enumerated(EnumType.STRING)
-    @Column(name = "scene", nullable = false, length = 50)
-    private SCENE scene;
+    private Scene scene;
 
     @Column(name = "scene_session_key", columnDefinition = "TEXT")
     private String sceneSessionKey;
 
-    @Column(name = "token", length = 512)
+    @Column(length = 512)
     private String token;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "modified_at", nullable = false)
+    private LocalDateTime modifiedAt;
+
     // Getters and setters
-    public Integer getUserId() {
-        return userId;
-    }
-
-    public void setUserId(Integer userId) {
-        this.userId = userId;
-    }
-
-    public SCENE getScene() {
-        return scene;
-    }
-
-    public void setScene(SCENE scene) {
-        this.scene = scene;
-    }
-
-    public String getSceneSessionKey() {
-        return sceneSessionKey;
-    }
-
-    public void setSceneSessionKey(String sceneSessionKey) {
-        this.sceneSessionKey = sceneSessionKey;
-    }
-
-    public String getToken() {
-        return token;
-    }
-
-    public void setToken(String token) {
-        this.token = token;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    // Enum for platform values
-    public enum SCENE {
-        DY_MINIAPP
-    }
 }

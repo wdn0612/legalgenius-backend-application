@@ -22,15 +22,15 @@ public class ConvertUtil {
         chatRecordVO.setCreatedTime(DateUtil.localDateTimeToUtcString(chatRecord.getCreatedAt()));
         chatRecordVO.setModifiedTime(DateUtil.localDateTimeToUtcString(chatRecord.getModifiedAt()));
         chatRecordVO.setConversationId(chatRecord.getChatId());
-        chatRecordVO.setUserId(chatRecord.getUserId());
-        chatRecordVO.setPartnerId(chatRecord.getPartnerId());
-        chatRecordVO.setPlatform(chatRecord.getPlatform());
+        chatRecordVO.setUserId(chatRecord.getUser().getUserId());
+        chatRecordVO.setPartnerId(chatRecord.getPartner().getPartnerId());
+        chatRecordVO.setScene(chatRecord.getScene().name());
         chatRecordVO.setMessage(JsonUtil.jsonArrayToObjectList(chatRecord.getMessage(), Message.class));
         chatRecordVO.setReserved(chatRecord.getReservationId() != null);
         chatRecordVO.setCategory(chatRecord.getCategory());
         chatRecordVO.setSummary(chatRecord.getSummary());
         chatRecordVO.setPriority(chatRecord.getPriority());
-        chatRecordVO.setFollowupStatus(chatRecord.getFollowupStatus());
+        chatRecordVO.setFollowupStatus(chatRecord.getFollowupStatus().name());
         chatRecordVO.setRemark(chatRecord.getRemark());
         return chatRecordVO;
     }

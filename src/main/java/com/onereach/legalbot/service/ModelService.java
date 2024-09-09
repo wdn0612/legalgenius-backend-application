@@ -20,6 +20,7 @@ import com.onereach.legalbot.service.response.SummaryResponse;
 public interface ModelService {
 
     SummaryResponse summarize(SummaryRequest request);
+
     CategoryResponse categorize(CategoryRequest request);
 
     CompletionResponse complete(CompletionRequest request);

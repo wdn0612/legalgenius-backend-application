@@ -19,10 +19,10 @@ import com.onereach.legalbot.facade.request.MngUpdateRecordRequest;
 import com.onereach.legalbot.facade.response.MngQueryRecordDetailResponse;
 import com.onereach.legalbot.facade.response.MngQueryRecordListResponse;
 import com.onereach.legalbot.facade.response.MngUpdateRecordResponse;
-import com.onereach.legalbot.infrastructure.ChatRecordRepository;
-import com.onereach.legalbot.infrastructure.PartnerMngUserInfoRepository;
+import com.onereach.legalbot.infrastructure.repository.ChatRecordRepository;
+import com.onereach.legalbot.infrastructure.repository.PartnerUserRepository;
 import com.onereach.legalbot.infrastructure.model.ChatRecord;
-import com.onereach.legalbot.infrastructure.model.PartnerMngUserInfo;
+import com.onereach.legalbot.infrastructure.model.PartnerUser;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -61,26 +61,26 @@ public class MngOperateFacadeImpl implements MngOperateFacade {
     private UserPasswordService userPasswordService;
 
     @Resource
-    private PartnerMngUserInfoRepository partnerMngUserInfoRepository;
+    private PartnerUserRepository partnerUserRepository;
 
     @Override
     @PostMapping("/v1/mng/register")
     public ResponseEntity<Boolean> register(LoginRequest request) {
         // Check if the username already exists
-        if (partnerMngUserInfoRepository.findByUserName(request.getUsername()) != null) {
+        if (partnerUserRepository.findByUserName(request.getUsername()) != null) {
             return ResponseEntity.badRequest().body(false);
         }
 
         // Create a new user entity
-        PartnerMngUserInfo newUser = new PartnerMngUserInfo();
-        newUser.setPartnerId(request.getPartnerId());
+        PartnerUser newUser = new PartnerUser();
+        newUser.getPartner().setPartnerId(request.getPartnerId());
         newUser.setUserName(request.getUsername());
 
         // Encode the password before saving
         String encodedPassword = userPasswordService.encode(request.getPassword());
         newUser.setPasswordHash(encodedPassword);
 
-        partnerMngUserInfoRepository.save(newUser);
+        partnerUserRepository.save(newUser);
 
         // Return success
         return ResponseEntity.ok(true);

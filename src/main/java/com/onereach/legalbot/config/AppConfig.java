@@ -11,8 +11,10 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.http.converter.StringHttpMessageConverter;
 
 import java.util.concurrent.Executor;
+import java.nio.charset.StandardCharsets;
 
 /**
  * 应用基本配置
@@ -46,9 +48,18 @@ public class AppConfig {
     @Value("${jwt.expiration.days}")
     public Long jwtExpirationDays;
 
+    @Value("${model.base.url}")
+    public String modelBaseUrl;
+
+    @Value("${model.apikey}")
+    public String modelApiKey;
+
     @Bean
     public RestTemplate restTemplate() {
-        return new RestTemplate();
+
+        RestTemplate restTemplate = new RestTemplate();
+        restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
+        return restTemplate;
     }
 
     @Bean

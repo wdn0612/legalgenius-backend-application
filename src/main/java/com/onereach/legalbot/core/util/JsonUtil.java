@@ -19,6 +19,7 @@ import java.util.List;
 public class JsonUtil {
 
     public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
     public static <T> String listToJsonArrayStr(List<T> list) {
         String jsonArray = null;
         try {
@@ -31,9 +32,11 @@ public class JsonUtil {
 
     public static <T> List<T> jsonArrayToObjectList(String jsonArrayString, Class<T> clazz) {
         try {
-            return OBJECT_MAPPER.readValue(jsonArrayString, new TypeReference<List<T>>() {});
+            return OBJECT_MAPPER.readValue(jsonArrayString, new TypeReference<List<T>>() {
+            });
         } catch (JsonProcessingException e) {
-            throw new RuntimeException(String.format("error converting json array string to list of objects %s", jsonArrayString));
+            throw new RuntimeException(
+                    String.format("error converting json array string to list of objects %s", jsonArrayString));
         }
     }
 
@@ -53,6 +56,5 @@ public class JsonUtil {
             throw new RuntimeException("Failed to convert JSON string to object", e);
         }
     }
-
 
 }

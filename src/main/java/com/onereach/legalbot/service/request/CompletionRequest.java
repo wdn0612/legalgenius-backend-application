@@ -4,6 +4,7 @@
  */
 package com.onereach.legalbot.service.request;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.onereach.legalbot.facade.model.Message;
 import com.onereach.legalbot.facade.request.BaseRequest;
 import lombok.Getter;
@@ -19,5 +20,6 @@ import java.util.List;
 @Getter
 public class CompletionRequest extends BaseRequest {
 
-    private List<Message> messageList;
+    @JsonProperty("messages")
+    private List<Message> messages;
 }

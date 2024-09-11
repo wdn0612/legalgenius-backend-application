@@ -6,12 +6,14 @@ package com.onereach.legalbot.service.response;
 
 import lombok.Data;
 
+import com.onereach.legalbot.facade.model.Result;
+
 /**
  *
  * @author wangdaini
  * @version CalculatePriorityResponse.java, v 0.1 2024年08月27日 12:23 am wangdaini
  */
 @Data
-public class CalculatePriorityResponse {
+public class CalculatePriorityResponse extends Result {
     private Integer priority;
 }

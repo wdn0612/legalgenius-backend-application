@@ -28,7 +28,7 @@ public class ChatRecord {
     private Scene scene;
 
     @Column(columnDefinition = "TEXT", nullable = false)
-    private String message;
+    private String messages;
 
     @Column
     private Boolean reservationIntent;

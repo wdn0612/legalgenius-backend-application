@@ -29,8 +29,6 @@ public class ChatRequest extends BaseRequest {
 
     private Integer conversationId;
 
-    private Integer userId;
-
     @NotNull
     private List<Message> conversation;
 

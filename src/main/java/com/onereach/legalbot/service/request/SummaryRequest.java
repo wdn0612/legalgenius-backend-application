@@ -4,6 +4,7 @@
  */
 package com.onereach.legalbot.service.request;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.onereach.legalbot.facade.model.Message;
 import com.onereach.legalbot.facade.request.BaseRequest;
 import lombok.Getter;
@@ -22,7 +23,8 @@ public class SummaryRequest extends BaseRequest {
     /**
      * 总结类型 TITLE/CONVERSATION
      */
+    @JsonProperty("summary_type")
     private String summaryType;
 
-    private List<Message> messageList;
+    private List<Message> messages;
 }

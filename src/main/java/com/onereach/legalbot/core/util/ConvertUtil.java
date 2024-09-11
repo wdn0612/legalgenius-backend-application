@@ -25,7 +25,7 @@ public class ConvertUtil {
         chatRecordVO.setUserId(chatRecord.getUser().getUserId());
         chatRecordVO.setPartnerId(chatRecord.getPartner().getPartnerId());
         chatRecordVO.setScene(chatRecord.getScene().name());
-        chatRecordVO.setMessage(JsonUtil.jsonArrayToObjectList(chatRecord.getMessage(), Message.class));
+        chatRecordVO.setMessage(JsonUtil.jsonArrayToObjectList(chatRecord.getMessages(), Message.class));
         chatRecordVO.setReserved(chatRecord.getReservationId() != null);
         chatRecordVO.setCategory(chatRecord.getCategory());
         chatRecordVO.setSummary(chatRecord.getSummary());

@@ -40,13 +40,13 @@ public class AsyncService {
         return CompletableFuture.supplyAsync(() -> {
 
             ChatRecord chatRecord = chatRecordRepository.findByChatId(conversationId);
-            String message = chatRecord.getMessage();
+            String message = chatRecord.getMessages();
             List<Message> conversation = JsonUtil.jsonArrayToObjectList(message, Message.class);
 
             // 生成总结
             SummaryRequest summaryRequest = new SummaryRequest();
             summaryRequest.setSummaryType("CONVERSATION");
-            summaryRequest.setMessageList(conversation);
+            summaryRequest.setMessages(conversation);
             SummaryResponse summaryResponse = modelService.summarize(summaryRequest);
             String summary = summaryResponse.getSummary();
 

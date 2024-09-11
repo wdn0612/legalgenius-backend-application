@@ -32,10 +32,12 @@ import com.onereach.legalbot.infrastructure.repository.ReservationRepository;
 import com.onereach.legalbot.infrastructure.repository.UserRepository;
 import com.onereach.legalbot.infrastructure.repository.UserPlatformAccountRepository;
 import com.onereach.legalbot.infrastructure.repository.UserSessionRepository;
+import com.onereach.legalbot.infrastructure.repository.PartnerRepository;
 import com.onereach.legalbot.infrastructure.model.User;
 import com.onereach.legalbot.infrastructure.model.UserPlatformAccount;
 import com.onereach.legalbot.infrastructure.model.UserSession;
 import com.onereach.legalbot.infrastructure.model.ChatRecord;
+import com.onereach.legalbot.infrastructure.model.Partner;
 import com.onereach.legalbot.infrastructure.model.Reservation;
 import com.onereach.legalbot.infrastructure.model.enums.*;
 import com.onereach.legalbot.service.ModelService;
@@ -94,6 +96,9 @@ public class BotFacadeImpl implements BotFacade {
     private UserPlatformAccountRepository userPlatformAccountRepository;
 
     @Resource
+    private PartnerRepository partnerRepository;
+
+    @Resource
     private ModelService modelService;
 
     @Resource
@@ -132,18 +137,18 @@ public class BotFacadeImpl implements BotFacade {
                 // 注：抖音 openid 在我们系统中被记录为：platform=dy_open, platformUserId=openid
                 String openId = code2SessionResponse.getData().getOpenid();
                 Platform platform = Platform.DY_OPEN;
-                UserPlatformAccount userPlatformAccount = userPlatformAccountRepository
+                UserPlatformAccount openPlatformAccount = userPlatformAccountRepository
                         .findByPlatformUserIdAndPlatform(openId, platform);
-                if (userPlatformAccount == null) {
+                if (openPlatformAccount == null) {
                     // 先创建一个空用户
                     User user = userRepository.save(new User());
 
                     // 创建一个新的 platform account
-                    userPlatformAccount = new UserPlatformAccount();
-                    userPlatformAccount.setUser(user);
-                    userPlatformAccount.setPlatform(platform);
-                    userPlatformAccount.setPlatformUserId(openId);
-                    userPlatformAccountRepository.save(userPlatformAccount);
+                    openPlatformAccount = new UserPlatformAccount();
+                    openPlatformAccount.setUser(user);
+                    openPlatformAccount.setPlatform(platform);
+                    openPlatformAccount.setPlatformUserId(openId);
+                    userPlatformAccountRepository.save(openPlatformAccount);
                 }
 
                 // 同时我们也会记录用户的 unionId
@@ -154,7 +159,7 @@ public class BotFacadeImpl implements BotFacade {
                 if (unionPlatformAccount == null) {
                     // 创建一个新的 platform account
                     unionPlatformAccount = new UserPlatformAccount();
-                    unionPlatformAccount.setUser(userPlatformAccount.getUser());
+                    unionPlatformAccount.setUser(openPlatformAccount.getUser());
                     unionPlatformAccount.setPlatform(unionPlatform);
                     unionPlatformAccount.setPlatformUserId(unionId);
                     userPlatformAccountRepository.save(unionPlatformAccount);
@@ -162,12 +167,12 @@ public class BotFacadeImpl implements BotFacade {
 
                 // 在数据库 user_session 当中记录用户在前端的登录态信息, userId + scene 作为唯一标识
                 Scene scene = body.getScene();
-                Integer userId = userPlatformAccount.getUser().getUserId();
+                Integer userId = openPlatformAccount.getUser().getUserId();
 
                 if (userSessionRepository.findByUser_UserIdAndScene(userId, scene) == null) {
                     // 如果数据库中没有该用户的登录态信息，则 create 一个新的登录态信息
                     UserSession userSession = new UserSession();
-                    userSession.setUser(userPlatformAccount.getUser());
+                    userSession.setUser(openPlatformAccount.getUser());
                     userSession.setScene(scene);
                     userSession.setSceneSessionKey(code2SessionResponse.getData().getSessionKey());
                     userSessionRepository.save(userSession);
@@ -179,7 +184,7 @@ public class BotFacadeImpl implements BotFacade {
                 }
 
                 // 生成 token，返回给前端，改 token 后续查找该用户的 session key
-                User user = userPlatformAccount.getUser();
+                User user = openPlatformAccount.getUser();
                 String token = authService.generateTokenForUser(user);
                 DouyinLoginResponse douyinLoginResponse = new DouyinLoginResponse();
                 douyinLoginResponse.setToken(token);
@@ -312,41 +317,51 @@ public class BotFacadeImpl implements BotFacade {
                         ChatRecord chatRecord;
                         String title = null;
 
+                        // 从 JWT token 中获取 userId
+                        String jwtToken = httpRequest.getHeaders().getFirst("Authorization");
+                        if (jwtToken == null || !jwtToken.startsWith("Bearer ")) {
+                            throw new RuntimeException("Authorization header is required.");
+                        }
+                        jwtToken = jwtToken.substring(7); // 剔除 Bearer
+                        Integer userId = authService.getUserIdFromToken(jwtToken);
+
                         if (body.getConversationId() != null) {
                             chatRecord = chatRecordRepository.findByChatId(
                                     body.getConversationId());
-                            chatRecord.setMessage(JsonUtil.listToJsonArrayStr(conversation));
+                            chatRecord.setMessages(JsonUtil.listToJsonArrayStr(conversation));
                             chatRecordRepository.save(chatRecord);
                         } else {
                             // 初始化chatRecord
                             ChatRecord newChatRecord = new ChatRecord();
                             newChatRecord.setCreatedAt(LocalDateTime.now());
                             newChatRecord.setModifiedAt(LocalDateTime.now());
-                            newChatRecord.getUser().setUserId(body.getUserId());
-                            newChatRecord.getPartner().setPartnerId(0);
+                            User user = userRepository.findByUserId(userId);
+                            String partnerName = body.getPartner();
+                            Partner partner = partnerRepository.findByPartnerName(partnerName);
+                            newChatRecord.setUser(user);
+                            newChatRecord.setPartner(partner);
                             newChatRecord.setScene(body.getScene());
-                            newChatRecord.setMessage(JsonUtil.listToJsonArrayStr(conversation));
+                            newChatRecord.setMessages(JsonUtil.listToJsonArrayStr(conversation));
                             newChatRecord.setReservationIntent(false);
-
                             chatRecord = chatRecordRepository.save(newChatRecord);
                         }
 
                         if (conversation.size() == 3) {
                             SummaryRequest summaryRequest = new SummaryRequest();
                             summaryRequest.setSummaryType("TITLE");
-                            summaryRequest.setMessageList(conversation);
+                            summaryRequest.setMessages(conversation);
                             SummaryResponse summaryResponse = modelService.summarize(
                                     summaryRequest);
                             title = summaryResponse.getSummary();
                         }
 
                         CompletionRequest completionRequest = new CompletionRequest();
-                        completionRequest.setMessageList(conversation);
+                        completionRequest.setMessages(conversation);
                         CompletionResponse completionResponse = modelService.complete(
                                 completionRequest);
                         String completion = completionResponse.getSystemCompletion();
                         conversation.add(new Message(Role.ASSISTANT, completion));
-                        chatRecord.setMessage(JsonUtil.listToJsonArrayStr(conversation));
+                        chatRecord.setMessages(JsonUtil.listToJsonArrayStr(conversation));
                         chatRecord.setReservationIntent(completionResponse.isReservationIntent());
 
                         chatRecordRepository.save(chatRecord);

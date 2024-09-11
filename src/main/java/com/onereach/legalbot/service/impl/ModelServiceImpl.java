@@ -14,15 +14,19 @@ import com.onereach.legalbot.service.response.CalculatePriorityResponse;
 import com.onereach.legalbot.service.response.CategoryResponse;
 import com.onereach.legalbot.service.response.CompletionResponse;
 import com.onereach.legalbot.service.response.SummaryResponse;
+import com.onereach.legalbot.service.template.IntegrationTemplate;
+import com.onereach.legalbot.service.template.IntegrationCallback;
+import com.onereach.legalbot.config.AppConfig;
+
 import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
-
-import static com.onereach.legalbot.core.constant.CommonConstant.MODEL_DOMAIN_NAME;
 
 /**
  * @author wangdaini
@@ -34,52 +38,122 @@ public class ModelServiceImpl implements ModelService {
 
     private final RestTemplate restTemplate;
 
-    public ModelServiceImpl(RestTemplate restTemplate) {this.restTemplate = restTemplate;}
+    @Autowired
+    private AppConfig appConfig;
+
+    public ModelServiceImpl(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
+    }
 
     @Override
     public SummaryResponse summarize(SummaryRequest request) {
-        String endpoint = "";
-        String url = MODEL_DOMAIN_NAME + "";
-        return restTemplate.postForObject(url, request, SummaryResponse.class);
+
+        return IntegrationTemplate.invoke(new IntegrationCallback<SummaryResponse>() {
+
+            @Override
+            public SummaryResponse execute() {
+                return callModelApi("/v1/chat/summary", request, SummaryResponse.class);
+            }
+
+            @Override
+            public void handleFailResult(SummaryResponse result) {
+                log.error("Failed to summarize: {}", result);
+            }
+
+            @Override
+            public boolean success(SummaryResponse result) {
+                return result != null && result.getResultStatus() == "S";
+            }
+        });
+
     }
 
     @Override
     public CategoryResponse categorize(CategoryRequest request) {
-        return null;
+        return IntegrationTemplate.invoke(new IntegrationCallback<CategoryResponse>() {
+
+            @Override
+            public CategoryResponse execute() {
+                return callModelApi("/v1/chat/category", request, CategoryResponse.class);
+            }
+
+            @Override
+            public void handleFailResult(CategoryResponse result) {
+                log.error("Failed to categorize: {}", result);
+            }
+
+            @Override
+            public boolean success(CategoryResponse result) {
+                return result != null && result.getResultStatus() == "S";
+            }
+        });
     }
 
     @Override
     public CompletionResponse complete(CompletionRequest request) {
-        CompletionResponse completionResponse = new CompletionResponse();
-        // TEST用;
-        completionResponse.setSystemCompletion("system completion");
-        completionResponse.setReservationIntent(false);
-        return completionResponse;
+        return IntegrationTemplate.invoke(new IntegrationCallback<CompletionResponse>() {
+
+            @Override
+            public CompletionResponse execute() {
+                return callModelApi("/v1/chat/completions", request, CompletionResponse.class);
+            }
+
+            @Override
+            public void handleFailResult(CompletionResponse result) {
+                log.error("Failed to get completion: {}", result);
+                throw new RuntimeException("Failed to get completion");
+            }
+
+            @Override
+            public boolean success(CompletionResponse result) {
+                // return result != null && result.getResultStatus() == "S";
+                return true;
+            }
+        });
     }
 
     @Override
     public CalculatePriorityResponse calculatePriority(CalculatePriorityRequest request) {
-        return null;
+        return IntegrationTemplate.invoke(new IntegrationCallback<CalculatePriorityResponse>() {
+
+            @Override
+            public CalculatePriorityResponse execute() {
+                return callModelApi("/v1/chat/priority", request, CalculatePriorityResponse.class);
+            }
+
+            @Override
+            public void handleFailResult(CalculatePriorityResponse result) {
+                log.error("Failed to calculate priority: {}", result);
+            }
+
+            @Override
+            public boolean success(CalculatePriorityResponse result) {
+                return result != null && result.getResultStatus() == "S";
+            }
+        });
     }
 
     private <T> T callModelApi(String endpoint, Object request, Class<T> responseClazz) {
-        String url = "https://api.example.com/" + endpoint; //todo
+
+        // Create the URL by concatenating the base URL and the endpoint
+        String url = appConfig.modelBaseUrl + endpoint;
 
         // Create headers
         HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", "Bearer 509572ce4e1404eef1458506204495385e4782c89b81525aba3c99a66793f17e"); //todo
+        headers.set("Authorization", "Bearer " + appConfig.modelApiKey);
+        headers.set("Accept-Charset", "UTF-8");
 
         // Create the request entity
         HttpEntity<Object> entity = new HttpEntity<>(request, headers);
 
-        // Make the HTTP GET request, passing the request entity
+        // Make the HTTP POST request, passing the request entity
         ResponseEntity<String> response = restTemplate.exchange(
                 url,
                 HttpMethod.POST,
                 entity,
-                String.class
-        );
+                String.class);
 
+        log.info("Model API response: {}", response);
         // Return the response body
         return JsonUtil.fromJson(response.getBody(), responseClazz);
     }

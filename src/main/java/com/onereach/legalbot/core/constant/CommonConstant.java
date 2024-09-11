@@ -14,7 +14,6 @@ public class CommonConstant {
 
     public static final String MODEL_DOMAIN_NAME = "";
 
-
     public static final String SYSTEM = "system";
 
     public static final String USER = "user";

@@ -26,49 +26,53 @@ public class ChatRecordVO implements Serializable {
     private String createdTime;
     private String modifiedTime;
     private Integer conversationId;
-    private Integer userId;
-    private Integer partnerId;
-    private String scene;
-    private List<Message> message;
+    // private Integer userId;
+    // private Integer partnerId;
+    // private String scene;
+    private String title;
+    private List<Message> messages;
     private boolean reserved;
-    private String category;
-    private String summary;
-    private Integer priority;
-    private String followupStatus;
-    private String remark;
+    private Integer reservationId;
+    // private String category;
+    // private String summary;
+    // private Integer priority;
+    // private String followupStatus;
+    // private String remark;
 
     /**
      * @see Object#toString()
      */
-    @Override
-    public String toString() {
-        StringBuilder builder = new StringBuilder("ChatRecordVO [createdTime='");
-        builder.append(createdTime).append("'");
-        builder.append(", modifiedTime='");
-        builder.append(modifiedTime).append("'");
-        builder.append(", conversationId=");
-        builder.append(conversationId);
-        builder.append(", userId=");
-        builder.append(userId);
-        builder.append(", partnerId=");
-        builder.append(partnerId);
-        builder.append(", scene='");
-        builder.append(scene).append("'");
-        builder.append(", message=");
-        builder.append(message);
-        builder.append(", reserved=");
-        builder.append(reserved);
-        builder.append(", category='");
-        builder.append(category).append("'");
-        builder.append(", summary='");
-        builder.append(summary).append("'");
-        builder.append(", priority=");
-        builder.append(priority);
-        builder.append(", followupStatus='");
-        builder.append(followupStatus).append("'");
-        builder.append(", remark='");
-        builder.append(remark).append("'");
-        builder.append("]");
-        return builder.toString();
-    }
+    // @Override
+    // public String toString() {
+    // StringBuilder builder = new StringBuilder("ChatRecordVO [createdTime='");
+    // builder.append(createdTime).append("'");
+    // builder.append(", modifiedTime='");
+    // builder.append(modifiedTime).append("'");
+    // builder.append(", conversationId=");
+    // builder.append(conversationId);
+    // builder.append(", title=");
+    // builder.append(title);
+    // builder.append(", userId=");
+    // builder.append(userId);
+    // builder.append(", partnerId=");
+    // builder.append(partnerId);
+    // builder.append(", scene='");
+    // builder.append(scene).append("'");
+    // builder.append(", message=");
+    // builder.append(message);
+    // builder.append(", reserved=");
+    // builder.append(reserved);
+    // builder.append(", category='");
+    // builder.append(category).append("'");
+    // builder.append(", summary='");
+    // builder.append(summary).append("'");
+    // builder.append(", priority=");
+    // builder.append(priority);
+    // builder.append(", followupStatus='");
+    // builder.append(followupStatus).append("'");
+    // builder.append(", remark='");
+    // builder.append(remark).append("'");
+    // builder.append("]");
+    // return builder.toString();
+    // }
 }

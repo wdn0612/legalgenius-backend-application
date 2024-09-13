@@ -535,8 +535,17 @@ public class BotFacadeImpl implements BotFacade {
                 new ApiProcessFunction<ResponseEntity<QueryChatRecordListResponse>>() {
                     @Override
                     public ResponseEntity<QueryChatRecordListResponse> execute() throws Exception {
+
+                        // 从 JWT token 中获取 userId
+                        String jwtToken = request.getHeaders().getFirst("Authorization");
+                        if (jwtToken == null || !jwtToken.startsWith("Bearer ")) {
+                            throw new RuntimeException("Authorization header is required.");
+                        }
+                        jwtToken = jwtToken.substring(7); // 剔除 Bearer
+                        Integer userId = authService.getUserIdFromToken(jwtToken);
+
                         List<ChatRecord> chatRecords = chatRecordRepository.findByUser_UserIdOrderByCreatedAtDesc(
-                                request.getBody().getUserId());
+                                userId);
                         List<ChatRecordVO> chatRecordVOList = chatRecords.stream()
                                 .map(ConvertUtil::convertToChatRecordVO)
                                 .collect(Collectors.toList());

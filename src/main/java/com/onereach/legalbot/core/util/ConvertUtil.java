@@ -20,18 +20,21 @@ public class ConvertUtil {
         }
         ChatRecordVO chatRecordVO = new ChatRecordVO();
         chatRecordVO.setCreatedTime(DateUtil.localDateTimeToUtcString(chatRecord.getCreatedAt()));
-        chatRecordVO.setModifiedTime(DateUtil.localDateTimeToUtcString(chatRecord.getModifiedAt()));
+        // chatRecordVO.setModifiedTime(DateUtil.localDateTimeToUtcString(chatRecord.getModifiedAt()));
         chatRecordVO.setConversationId(chatRecord.getChatId());
-        chatRecordVO.setUserId(chatRecord.getUser().getUserId());
-        chatRecordVO.setPartnerId(chatRecord.getPartner().getPartnerId());
-        chatRecordVO.setScene(chatRecord.getScene().name());
-        chatRecordVO.setMessage(JsonUtil.jsonArrayToObjectList(chatRecord.getMessages(), Message.class));
+        // chatRecordVO.setUserId(chatRecord.getUser().getUserId());
+        // chatRecordVO.setPartnerId(chatRecord.getPartner().getPartnerId());
+        // chatRecordVO.setScene(chatRecord.getScene().name());
+        chatRecordVO.setMessages(JsonUtil.jsonArrayToObjectList(chatRecord.getMessages(), Message.class));
         chatRecordVO.setReserved(chatRecord.getReservationId() != null);
-        chatRecordVO.setCategory(chatRecord.getCategory());
-        chatRecordVO.setSummary(chatRecord.getSummary());
-        chatRecordVO.setPriority(chatRecord.getPriority());
-        chatRecordVO.setFollowupStatus(chatRecord.getFollowupStatus().name());
-        chatRecordVO.setRemark(chatRecord.getRemark());
+        chatRecordVO.setReservationId(chatRecord.getReservationId());
+        // chatRecordVO.setCategory(chatRecord.getCategory());
+        // chatRecordVO.setSummary(chatRecord.getSummary());
+        // chatRecordVO.setPriority(chatRecord.getPriority());
+        // chatRecordVO.setFollowupStatus(chatRecord.getFollowupStatus().name());
+        // chatRecordVO.setRemark(chatRecord.getRemark());
+        chatRecordVO.setTitle(chatRecord.getTitle());
+
         return chatRecordVO;
     }
 }

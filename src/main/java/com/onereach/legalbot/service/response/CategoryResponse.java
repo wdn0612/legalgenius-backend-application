@@ -4,7 +4,7 @@
  */
 package com.onereach.legalbot.service.response;
 
-import com.onereach.legalbot.facade.model.Result;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -15,6 +15,8 @@ import lombok.Setter;
  */
 @Getter
 @Setter
-public class CategoryResponse extends Result {
+public class CategoryResponse extends BaseResponse {
+
+    @JsonProperty("category")
     private String category;
 }

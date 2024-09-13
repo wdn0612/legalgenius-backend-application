@@ -34,4 +34,10 @@ public class Message implements Serializable {
      */
     @JsonProperty("content")
     private String content;
+
+    /**
+     * 消息发送时间
+     */
+    @JsonProperty("timestamp")
+    private String timestamp;
 }

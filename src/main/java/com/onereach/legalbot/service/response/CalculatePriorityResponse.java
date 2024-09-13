@@ -4,16 +4,23 @@
  */
 package com.onereach.legalbot.service.response;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
-import com.onereach.legalbot.facade.model.Result;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  *
  * @author wangdaini
  * @version CalculatePriorityResponse.java, v 0.1 2024年08月27日 12:23 am wangdaini
  */
-@Data
-public class CalculatePriorityResponse extends Result {
+@Getter
+@Setter
+public class CalculatePriorityResponse extends BaseResponse {
+
+    @JsonProperty("priority")
     private Integer priority;
+
+    @JsonProperty("reason")
+    private String reason;
 }

@@ -58,11 +58,16 @@ public class ModelServiceImpl implements ModelService {
             @Override
             public void handleFailResult(SummaryResponse result) {
                 log.error("Failed to summarize: {}", result);
+                throw new RuntimeException("Failed to summarize");
             }
 
             @Override
             public boolean success(SummaryResponse result) {
-                return result != null && result.getResultStatus() == "S";
+                if (result == null) {
+                    return false;
+                }
+
+                return "S".equals(result.getResult().getResultStatus());
             }
         });
 
@@ -80,11 +85,16 @@ public class ModelServiceImpl implements ModelService {
             @Override
             public void handleFailResult(CategoryResponse result) {
                 log.error("Failed to categorize: {}", result);
+                throw new RuntimeException("Failed to categorize");
             }
 
             @Override
             public boolean success(CategoryResponse result) {
-                return result != null && result.getResultStatus() == "S";
+                if (result == null) {
+                    return false;
+                }
+
+                return "S".equals(result.getResult().getResultStatus());
             }
         });
     }
@@ -106,8 +116,11 @@ public class ModelServiceImpl implements ModelService {
 
             @Override
             public boolean success(CompletionResponse result) {
-                // return result != null && result.getResultStatus() == "S";
-                return true;
+                if (result == null) {
+                    return false;
+                }
+
+                return "S".equals(result.getResult().getResultStatus());
             }
         });
     }
@@ -124,11 +137,16 @@ public class ModelServiceImpl implements ModelService {
             @Override
             public void handleFailResult(CalculatePriorityResponse result) {
                 log.error("Failed to calculate priority: {}", result);
+                throw new RuntimeException("Failed to calculate priority");
             }
 
             @Override
             public boolean success(CalculatePriorityResponse result) {
-                return result != null && result.getResultStatus() == "S";
+                if (result == null) {
+                    return false;
+                }
+
+                return "S".equals(result.getResult().getResultStatus());
             }
         });
     }

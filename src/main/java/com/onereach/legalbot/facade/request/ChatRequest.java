@@ -32,6 +32,4 @@ public class ChatRequest extends BaseRequest {
     @NotNull
     private List<Message> conversation;
 
-    private String timestamp;
-
 }

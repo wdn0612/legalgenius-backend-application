@@ -57,6 +57,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.security.SecurityProperties;
+import org.springframework.cglib.core.Local;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.RequestEntity;
@@ -346,23 +347,36 @@ public class BotFacadeImpl implements BotFacade {
                             chatRecord = chatRecordRepository.save(newChatRecord);
                         }
 
-                        if (conversation.size() == 3) {
+                        // 如果有 3 条用户输入，调用模型生成标题
+                        int userMessageCount = 0;
+                        for (Message message : conversation) {
+                            if (Role.USER.equals(message.getRole())) {
+                                userMessageCount++;
+                            }
+                        }
+                        if (userMessageCount == 3) {
                             SummaryRequest summaryRequest = new SummaryRequest();
                             summaryRequest.setSummaryType("TITLE");
                             summaryRequest.setMessages(conversation);
                             SummaryResponse summaryResponse = modelService.summarize(
                                     summaryRequest);
-                            title = summaryResponse.getSummary();
+                            title = summaryResponse.getTitle();
                         }
+
+                        // 更新最近活动时间
+                        asyncService.updateLastActivityTime(chatRecord.getChatId());
 
                         CompletionRequest completionRequest = new CompletionRequest();
                         completionRequest.setMessages(conversation);
                         CompletionResponse completionResponse = modelService.complete(
                                 completionRequest);
                         String completion = completionResponse.getSystemCompletion();
-                        conversation.add(new Message(Role.ASSISTANT, completion));
+                        // get current timestamp in milliseconds
+                        String completionTimestamp = String.valueOf(System.currentTimeMillis());
+                        conversation.add(new Message(Role.ASSISTANT, completion, completionTimestamp));
                         chatRecord.setMessages(JsonUtil.listToJsonArrayStr(conversation));
                         chatRecord.setReservationIntent(completionResponse.isReservationIntent());
+                        chatRecord.setTitle(title);
 
                         chatRecordRepository.save(chatRecord);
 
@@ -370,8 +384,9 @@ public class BotFacadeImpl implements BotFacade {
                         ChatResponse chatResponse = new ChatResponse();
                         chatResponse.setConversationId(chatRecord.getChatId());
                         chatResponse.setChatResponse(completion);
-                        chatResponse.setReservationIntent(false);
+                        chatResponse.setReservationIntent(completionResponse.isReservationIntent());
                         chatResponse.setTitle(title);
+                        chatResponse.setTimestamp(completionTimestamp);
                         chatResponse.setResult(Result.success());
 
                         HttpHeaders responseHeaders = new HttpHeaders();
@@ -410,17 +425,32 @@ public class BotFacadeImpl implements BotFacade {
                     public ResponseEntity<ReserveResponse> execute() throws Exception {
 
                         ReserveRequest reserveRequest = httpRequest.getBody();
+                        if (reserveRequest == null || reserveRequest.getConversationId() == null) {
+                            throw new RuntimeException("conversationId is required.");
+                        }
+
                         Reservation reservation = new Reservation();
-                        reservation.getUser().setUserId(reserveRequest.getUserId());
-                        reservation.getChatRecord().setChatId(reserveRequest.getConversationId());
+
+                        // 从 JWT token 中获取 userId
+                        String jwtToken = httpRequest.getHeaders().getFirst("Authorization");
+                        if (jwtToken == null || !jwtToken.startsWith("Bearer ")) {
+                            throw new RuntimeException("Authorization header is required.");
+                        }
+                        jwtToken = jwtToken.substring(7); // 剔除 Bearer
+                        Integer userId = authService.getUserIdFromToken(jwtToken);
+
+                        User user = userRepository.findByUserId(userId);
+                        reservation.setUser(user);
+
+                        ChatRecord chatRecord = chatRecordRepository.findByChatId(
+                                reserveRequest.getConversationId());
+                        reservation.setChatRecord(chatRecord);
                         reservation.setReservationDate(LocalDateTime.now());
                         reservation.setCreatedAt(LocalDateTime.now());
 
                         Reservation savedReservation = reservationRepository.save(reservation);
                         Integer reservationId = savedReservation.getReservationId();
 
-                        ChatRecord chatRecord = chatRecordRepository.findByChatId(
-                                reserveRequest.getConversationId());
                         chatRecord.setReservationId(reservationId);
                         chatRecordRepository.save(chatRecord);
                         ReserveResponse reserveResponse = new ReserveResponse();
@@ -461,12 +491,18 @@ public class BotFacadeImpl implements BotFacade {
 
                     @Override
                     public ResponseEntity<EndChatResponse> execute() throws Exception {
+
+                        EndChatRequest request = endChatRequest.getBody();
+                        if (request == null || request.getConversationId() == null) {
+                            throw new RuntimeException("conversationId is required.");
+                        }
+
                         asyncService.generatePostChatInfo(
-                                endChatRequest.getBody().getConversationId());
+                                request.getConversationId());
 
                         EndChatResponse endChatResponse = new EndChatResponse();
                         endChatResponse.setConversationId(
-                                endChatRequest.getBody().getConversationId());
+                                request.getConversationId());
                         endChatResponse.setResult(Result.success());
                         return new ResponseEntity<EndChatResponse>(endChatResponse,
                                 endChatRequest.getHeaders(), 200);

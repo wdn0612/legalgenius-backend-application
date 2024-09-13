@@ -6,7 +6,6 @@ package com.onereach.legalbot.service.response;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.onereach.legalbot.facade.model.Result;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -17,7 +16,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class CompletionResponse extends Result {
+public class CompletionResponse extends BaseResponse {
 
     @JsonProperty("message")
     private String systemCompletion;

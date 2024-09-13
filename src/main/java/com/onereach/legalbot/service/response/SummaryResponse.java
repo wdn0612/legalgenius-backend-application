@@ -4,9 +4,13 @@
  */
 package com.onereach.legalbot.service.response;
 
-import com.onereach.legalbot.facade.model.Result;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.util.Optional;
 
 /**
  * @author wangdaini
@@ -14,7 +18,21 @@ import lombok.Setter;
  */
 @Getter
 @Setter
-public class SummaryResponse extends Result {
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class SummaryResponse extends BaseResponse {
 
+    @JsonProperty("summary")
     private String summary;
+
+    @JsonProperty("title")
+    private String title;
+
+    public boolean hasSummary() {
+        return summary != null && !summary.isEmpty();
+    }
+
+    public boolean hasTitle() {
+        return title != null && !title.isEmpty();
+    }
 }

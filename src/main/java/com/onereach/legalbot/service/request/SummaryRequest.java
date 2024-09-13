@@ -21,7 +21,7 @@ import java.util.List;
 public class SummaryRequest extends BaseRequest {
 
     /**
-     * 总结类型 TITLE/CONVERSATION
+     * 总结类型 TITLE/CASE
      */
     @JsonProperty("summary_type")
     private String summaryType;

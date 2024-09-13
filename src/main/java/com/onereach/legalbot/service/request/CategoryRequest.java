@@ -9,6 +9,7 @@ import com.onereach.legalbot.facade.request.BaseRequest;
 import lombok.Getter;
 import lombok.Setter;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 
 /**
@@ -18,5 +19,7 @@ import java.util.List;
 @Setter
 @Getter
 public class CategoryRequest extends BaseRequest {
+
+    @JsonProperty("messages")
     private List<Message> messageList;
 }

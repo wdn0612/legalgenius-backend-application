@@ -39,11 +39,17 @@ public class ChatRecord {
     @Column(length = 10)
     private String category;
 
+    @Column(length = 10)
+    private String title;
+
     @Column(length = 256)
     private String summary;
 
     @Column
     private Integer priority;
+
+    @Column(columnDefinition = "TEXT")
+    private String reason;
 
     @Column(length = 10)
     @Enumerated(EnumType.STRING)

@@ -17,7 +17,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-public class ChatResponse extends BaseResponse{
+public class ChatResponse extends BaseResponse {
 
     private static final long serialVersionUID = -5808626584277840093L;
 
@@ -25,4 +25,5 @@ public class ChatResponse extends BaseResponse{
     private String chatResponse;
     private boolean reservationIntent;
     private String title;
+    private String timestamp;
 }

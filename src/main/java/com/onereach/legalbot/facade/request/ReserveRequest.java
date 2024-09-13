@@ -19,13 +19,11 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class ReserveRequest extends BaseRequest{
+public class ReserveRequest extends BaseRequest {
 
     private static final long serialVersionUID = 5646567498128091028L;
 
-    private Integer userId;
     private Integer conversationId;
     private String notes;
-
 
 }
